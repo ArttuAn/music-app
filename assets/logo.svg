@@ -1,0 +1,30 @@
+<svg width="640" height="640" viewBox="0 0 640 640" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Song to App logo</title>
+  <desc id="desc">A waveform folding into an app window.</desc>
+  <defs>
+    <linearGradient id="bg" x1="86" y1="72" x2="552" y2="576" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0C9B72"/>
+      <stop offset="0.48" stop-color="#3156D4"/>
+      <stop offset="1" stop-color="#F05D3C"/>
+    </linearGradient>
+    <linearGradient id="wave" x1="118" y1="304" x2="522" y2="304" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#C6FF31"/>
+      <stop offset="0.4" stop-color="#00F0FF"/>
+      <stop offset="1" stop-color="#FFBF2E"/>
+    </linearGradient>
+    <filter id="shadow" x="58" y="54" width="532" height="536" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="26" stdDeviation="26" flood-color="#17191C" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+  <rect x="72" y="64" width="496" height="512" rx="72" fill="url(#bg)" filter="url(#shadow)"/>
+  <rect x="126" y="154" width="388" height="332" rx="34" fill="#FBFCF9" stroke="#17191C" stroke-width="12"/>
+  <rect x="126" y="154" width="388" height="66" rx="34" fill="#17191C"/>
+  <circle cx="174" cy="187" r="10" fill="#F05D3C"/>
+  <circle cx="208" cy="187" r="10" fill="#E7B91B"/>
+  <circle cx="242" cy="187" r="10" fill="#0C9B72"/>
+  <path d="M122 332H164L184 266L222 402L260 232L298 382L336 284L368 332H410" stroke="url(#wave)" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M410 332H510" stroke="#17191C" stroke-width="18" stroke-linecap="round"/>
+  <path d="M472 294L510 332L472 370" stroke="#17191C" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="190" y="424" width="86" height="18" rx="9" fill="#D9DED8"/>
+  <rect x="296" y="424" width="154" height="18" rx="9" fill="#D9DED8"/>
+</svg>

@@ -1,0 +1,55 @@
+<svg width="1180" height="720" viewBox="0 0 1180 720" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Song to App interface preview</title>
+  <desc id="desc">A stylized preview of the Song to App single-page interface.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1180" y2="720" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F6F7F2"/>
+      <stop offset="0.5" stop-color="#ECF6F1"/>
+      <stop offset="1" stop-color="#FFF3EA"/>
+    </linearGradient>
+    <linearGradient id="visual" x1="687" y1="194" x2="1074" y2="596" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#00F0FF"/>
+      <stop offset="0.45" stop-color="#3156D4"/>
+      <stop offset="1" stop-color="#FF2FB2"/>
+    </linearGradient>
+    <filter id="shadow" x="42" y="42" width="1096" height="626" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="22" stdDeviation="28" flood-color="#17191C" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+  <rect width="1180" height="720" rx="34" fill="url(#bg)"/>
+  <g filter="url(#shadow)">
+    <rect x="82" y="82" width="1016" height="556" rx="18" fill="#FFFFFF" stroke="#D9DED8"/>
+  </g>
+  <rect x="82" y="82" width="1016" height="76" rx="18" fill="#17191C"/>
+  <circle cx="128" cy="120" r="10" fill="#F05D3C"/>
+  <circle cx="162" cy="120" r="10" fill="#E7B91B"/>
+  <circle cx="196" cy="120" r="10" fill="#0C9B72"/>
+  <text x="238" y="130" font-family="Inter, Arial, sans-serif" font-size="26" font-weight="850" fill="#FBFCF9">Song to App</text>
+  <rect x="122" y="196" width="404" height="132" rx="12" fill="#121417"/>
+  <path d="M154 263H178L190 230L214 306L236 214L260 294L286 246L306 264H326L342 244L366 286L390 230L416 304L444 252L494 252" stroke="#00F0FF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="122" y="360" width="118" height="64" rx="8" fill="#F6F7F2" stroke="#D9DED8"/>
+  <rect x="266" y="360" width="118" height="64" rx="8" fill="#F6F7F2" stroke="#D9DED8"/>
+  <rect x="408" y="360" width="118" height="64" rx="8" fill="#F6F7F2" stroke="#D9DED8"/>
+  <text x="181" y="386" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="800" fill="#626A73">BPM</text>
+  <text x="181" y="410" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="850" fill="#17191C">128</text>
+  <text x="325" y="386" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="800" fill="#626A73">Mood</text>
+  <text x="325" y="410" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="850" fill="#17191C">euphoric</text>
+  <text x="467" y="386" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="800" fill="#626A73">Energy</text>
+  <text x="467" y="410" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="850" fill="#17191C">high</text>
+  <rect x="122" y="470" width="128" height="46" rx="8" fill="#0C9B72"/>
+  <rect x="266" y="470" width="128" height="46" rx="8" fill="#FFFFFF" stroke="#BAC4BC"/>
+  <text x="186" y="501" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="850" fill="#FFFFFF">Generate</text>
+  <text x="330" y="501" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="850" fill="#17191C">Regenerate</text>
+  <rect x="602" y="196" width="456" height="360" rx="14" fill="#FBFCF9" stroke="#D9DED8"/>
+  <rect x="632" y="226" width="396" height="300" rx="12" fill="#17191C"/>
+  <circle cx="830" cy="376" r="112" fill="url(#visual)" fill-opacity="0.9"/>
+  <circle cx="778" cy="342" r="46" fill="#C6FF31" fill-opacity="0.85"/>
+  <circle cx="885" cy="425" r="54" fill="#FFBF2E" fill-opacity="0.85"/>
+  <path d="M692 384C748 302 830 292 906 348C964 390 984 444 1000 496" stroke="#FBFCF9" stroke-width="10" stroke-linecap="round"/>
+  <rect x="602" y="584" width="114" height="42" rx="8" fill="#FFFFFF" stroke="#BAC4BC"/>
+  <rect x="732" y="584" width="114" height="42" rx="8" fill="#FFFFFF" stroke="#BAC4BC"/>
+  <rect x="862" y="584" width="114" height="42" rx="8" fill="#FFFFFF" stroke="#BAC4BC"/>
+  <text x="659" y="611" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="800" fill="#17191C">Copy</text>
+  <text x="789" y="611" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="800" fill="#17191C">Download</text>
+  <text x="919" y="611" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="800" fill="#17191C">Gallery</text>
+</svg>
