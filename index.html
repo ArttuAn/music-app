@@ -1,0 +1,1986 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Song to App</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #17191c;
+        --muted: #626a73;
+        --paper: #f6f7f2;
+        --panel: #ffffff;
+        --line: #d9ded8;
+        --line-strong: #bac4bc;
+        --green: #0c9b72;
+        --green-dark: #067253;
+        --coral: #f05d3c;
+        --yellow: #e7b91b;
+        --blue: #3156d4;
+        --pink: #be3f7b;
+        --shadow: 0 18px 50px rgba(23, 25, 28, 0.09);
+        --radius: 8px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        min-height: 100%;
+      }
+
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        letter-spacing: 0;
+      }
+
+      button,
+      input,
+      select,
+      textarea {
+        font: inherit;
+      }
+
+      button {
+        border: 0;
+      }
+
+      button:disabled,
+      input:disabled,
+      select:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
+      }
+
+      .app {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .topbar {
+        border-bottom: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.84);
+        backdrop-filter: blur(12px);
+        position: sticky;
+        top: 0;
+        z-index: 20;
+      }
+
+      .topbar-inner {
+        width: min(1420px, calc(100vw - 32px));
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        min-height: 68px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+      }
+
+      .mark {
+        width: 38px;
+        height: 38px;
+        border-radius: var(--radius);
+        background:
+          linear-gradient(135deg, var(--coral), transparent 58%),
+          linear-gradient(225deg, var(--blue), transparent 54%),
+          var(--green);
+        display: grid;
+        place-items: center;
+        color: white;
+        font-weight: 900;
+        box-shadow: 0 8px 22px rgba(12, 155, 114, 0.24);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(1.25rem, 2vw, 1.75rem);
+        line-height: 1.05;
+        letter-spacing: 0;
+      }
+
+      .model-chip {
+        color: var(--muted);
+        font-size: 0.88rem;
+        white-space: nowrap;
+      }
+
+      .shell {
+        width: min(1420px, calc(100vw - 32px));
+        margin: 24px auto 36px;
+        display: grid;
+        grid-template-columns: minmax(360px, 470px) minmax(0, 1fr);
+        gap: 20px;
+        flex: 1;
+      }
+
+      .left-stack,
+      .right-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        min-width: 0;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+      }
+
+      .panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 15px 16px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .panel-title {
+        margin: 0;
+        font-size: 0.96rem;
+        font-weight: 800;
+        letter-spacing: 0;
+      }
+
+      .panel-body {
+        padding: 16px;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .button,
+      .file-button {
+        min-height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 0 14px;
+        border-radius: var(--radius);
+        border: 1px solid var(--line-strong);
+        background: #ffffff;
+        color: var(--ink);
+        font-weight: 750;
+        cursor: pointer;
+        transition:
+          transform 150ms ease,
+          border-color 150ms ease,
+          background 150ms ease,
+          color 150ms ease;
+      }
+
+      .button:hover,
+      .file-button:hover {
+        transform: translateY(-1px);
+        border-color: var(--ink);
+      }
+
+      .button.primary {
+        background: var(--green);
+        border-color: var(--green);
+        color: white;
+      }
+
+      .button.primary:hover {
+        background: var(--green-dark);
+        border-color: var(--green-dark);
+      }
+
+      .button.coral {
+        background: var(--coral);
+        border-color: var(--coral);
+        color: white;
+      }
+
+      .button.ghost {
+        background: transparent;
+      }
+
+      .button.icon {
+        width: 40px;
+        padding: 0;
+        flex: 0 0 auto;
+      }
+
+      .hidden-input {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .field-grid {
+        display: grid;
+        gap: 12px;
+      }
+
+      .field-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .field {
+        display: grid;
+        gap: 6px;
+        min-width: 0;
+      }
+
+      .field span {
+        font-size: 0.78rem;
+        color: var(--muted);
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+
+      .field input,
+      .field select,
+      .field textarea {
+        width: 100%;
+        min-height: 40px;
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius);
+        padding: 9px 10px;
+        background: #ffffff;
+        color: var(--ink);
+        outline: none;
+      }
+
+      .field textarea {
+        min-height: 90px;
+        resize: vertical;
+      }
+
+      .field input:focus,
+      .field select:focus,
+      .field textarea:focus {
+        border-color: var(--blue);
+        box-shadow: 0 0 0 3px rgba(49, 86, 212, 0.14);
+      }
+
+      .hint {
+        color: var(--muted);
+        font-size: 0.86rem;
+        line-height: 1.45;
+      }
+
+      .wave-wrap {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        overflow: hidden;
+        background: #121417;
+      }
+
+      canvas.waveform {
+        width: 100%;
+        height: 152px;
+        display: block;
+      }
+
+      audio {
+        width: 100%;
+        margin-top: 12px;
+      }
+
+      .metrics {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .metric {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 10px;
+        min-width: 0;
+      }
+
+      .metric-label {
+        color: var(--muted);
+        font-size: 0.74rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+
+      .metric-value {
+        margin-top: 4px;
+        font-weight: 850;
+        font-size: 1rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .palette {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+      }
+
+      .swatch {
+        width: 38px;
+        height: 28px;
+        border-radius: 6px;
+        border: 1px solid rgba(0, 0, 0, 0.2);
+      }
+
+      .chips {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .chip {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        min-height: 30px;
+        padding: 5px 10px;
+        color: var(--ink);
+        background: #fbfcf9;
+        font-size: 0.86rem;
+        font-weight: 700;
+      }
+
+      .segmented {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius);
+        overflow: hidden;
+      }
+
+      .segment {
+        min-height: 38px;
+        background: white;
+        color: var(--ink);
+        border-right: 1px solid var(--line);
+        cursor: pointer;
+        font-weight: 760;
+      }
+
+      .segment:last-child {
+        border-right: 0;
+      }
+
+      .segment.active {
+        background: var(--ink);
+        color: white;
+      }
+
+      .status {
+        min-height: 36px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .spinner {
+        width: 18px;
+        height: 18px;
+        border: 3px solid rgba(12, 155, 114, 0.18);
+        border-top-color: var(--green);
+        border-radius: 50%;
+        animation: spin 800ms linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      details {
+        border-top: 1px solid var(--line);
+      }
+
+      summary {
+        list-style: none;
+        cursor: pointer;
+        padding: 14px 16px;
+        font-weight: 850;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .details-body {
+        padding: 0 16px 16px;
+      }
+
+      .json-view,
+      .stream-view {
+        background: #14171c;
+        color: #eff5eb;
+        border-radius: var(--radius);
+        padding: 12px;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 0.78rem;
+        line-height: 1.5;
+        overflow: auto;
+        max-height: 260px;
+        white-space: pre-wrap;
+      }
+
+      .preview-shell {
+        min-height: 620px;
+        display: grid;
+        grid-template-rows: auto 1fr;
+      }
+
+      .preview-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .preview-frame-wrap {
+        position: relative;
+        min-height: 560px;
+        background:
+          linear-gradient(90deg, rgba(23, 25, 28, 0.06) 1px, transparent 1px),
+          linear-gradient(0deg, rgba(23, 25, 28, 0.06) 1px, transparent 1px),
+          #fdfefb;
+        background-size: 22px 22px;
+      }
+
+      iframe {
+        width: 100%;
+        height: 100%;
+        min-height: 560px;
+        border: 0;
+        display: block;
+        background: white;
+      }
+
+      .empty-preview {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        padding: 32px;
+        color: var(--muted);
+        text-align: center;
+        font-weight: 750;
+      }
+
+      .gallery-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+        gap: 10px;
+      }
+
+      .gallery-item {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 10px;
+        background: #fbfcf9;
+        display: grid;
+        gap: 8px;
+      }
+
+      .gallery-name {
+        font-weight: 820;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .gallery-meta {
+        color: var(--muted);
+        font-size: 0.82rem;
+      }
+
+      .danger-text {
+        color: #8e2f1f;
+      }
+
+      .toast {
+        position: fixed;
+        right: 18px;
+        bottom: 18px;
+        background: var(--ink);
+        color: white;
+        border-radius: var(--radius);
+        padding: 10px 12px;
+        box-shadow: var(--shadow);
+        z-index: 50;
+        font-weight: 750;
+      }
+
+      @media (max-width: 1080px) {
+        .shell {
+          grid-template-columns: 1fr;
+        }
+
+        .preview-shell,
+        .preview-frame-wrap,
+        iframe {
+          min-height: 520px;
+        }
+      }
+
+      @media (max-width: 680px) {
+        .topbar-inner,
+        .shell {
+          width: min(100vw - 20px, 1420px);
+        }
+
+        .topbar-inner {
+          min-height: 76px;
+          align-items: flex-start;
+          flex-direction: column;
+          justify-content: center;
+          gap: 4px;
+        }
+
+        .field-row,
+        .metrics {
+          grid-template-columns: 1fr;
+        }
+
+        .segmented {
+          grid-template-columns: 1fr 1fr;
+        }
+
+        .preview-toolbar {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .actions {
+          width: 100%;
+        }
+
+        .button,
+        .file-button {
+          flex: 1 1 auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      const { useCallback, useEffect, useMemo, useRef, useState } = React;
+      const h = React.createElement;
+
+      const CLAUDE_MODEL = "claude-sonnet-4-20250514";
+      const STORAGE_KEY = "song-to-app-gallery-v1";
+      const API_STORAGE = {
+        anthropicKey: "song-to-app-anthropic-key",
+        anthropicProxy: "song-to-app-anthropic-proxy",
+        openaiKey: "song-to-app-openai-key",
+        openaiProxy: "song-to-app-openai-proxy",
+      };
+
+      const STOPWORDS = new Set(
+        "a an and are as at be but by for from has have he her hers him his i if in into is it its me my no not of on or our ours she so than that the their them then there these they this to up was we were what when where who why will with you your yours yeah yea ooh oh la na ah im i'm ive i've dont don't cant can't wont won't".split(
+          /\s+/,
+        ),
+      );
+
+      const palettes = {
+        melancholic: {
+          name: "muted blues, grays",
+          colors: ["#506579", "#8ca3b8", "#d8dee6", "#f0f3f1"],
+        },
+        tense: {
+          name: "deep reds, dark greens",
+          colors: ["#2d3f32", "#79291f", "#bf4a31", "#111417"],
+        },
+        chill: {
+          name: "pastels, soft greens",
+          colors: ["#93c9a3", "#d7ecd9", "#f6cdb5", "#8f91d8"],
+        },
+        uplifting: {
+          name: "warm yellows, oranges",
+          colors: ["#ffbf2e", "#ff7a45", "#0c9b72", "#22242a"],
+        },
+        dreamy: {
+          name: "purples, soft pinks",
+          colors: ["#8b6fd8", "#f0a5c8", "#b9e6d3", "#272337"],
+        },
+        euphoric: {
+          name: "neons, electric blues",
+          colors: ["#00f0ff", "#3156ff", "#ff2fb2", "#c6ff31"],
+        },
+      };
+
+      const emptyAnalysis = {
+        sourceName: "",
+        duration: 0,
+        bpm: null,
+        energy: "unknown",
+        energyScore: 0,
+        dominantRange: "unknown",
+        frequencyProfile: { bass: 0, mid: 0, treble: 0 },
+        mood: "unknown",
+        palette: palettes.chill,
+        themes: [],
+        transcript: "",
+        genre: "unknown",
+      };
+
+      function classNames() {
+        return Array.from(arguments).filter(Boolean).join(" ");
+      }
+
+      function getStored(name) {
+        try {
+          return sessionStorage.getItem(name) || "";
+        } catch (_error) {
+          return "";
+        }
+      }
+
+      function setStored(name, value) {
+        try {
+          if (value) sessionStorage.setItem(name, value);
+          else sessionStorage.removeItem(name);
+        } catch (_error) {}
+      }
+
+      function formatDuration(seconds) {
+        if (!Number.isFinite(seconds) || seconds <= 0) return "0:00";
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.round(seconds % 60).toString().padStart(2, "0");
+        return `${mins}:${secs}`;
+      }
+
+      function clamp(value, min, max) {
+        return Math.max(min, Math.min(max, value));
+      }
+
+      function computeRms(samples) {
+        if (!samples || samples.length === 0) return 0;
+        const stride = Math.max(1, Math.floor(samples.length / 240000));
+        let sum = 0;
+        let count = 0;
+        for (let i = 0; i < samples.length; i += stride) {
+          const value = samples[i];
+          sum += value * value;
+          count++;
+        }
+        return Math.sqrt(sum / Math.max(1, count));
+      }
+
+      function classifyEnergy(rms) {
+        if (rms < 0.045) return "low";
+        if (rms < 0.11) return "medium";
+        return "high";
+      }
+
+      function deriveMood(bpm, energy) {
+        const tempo = Number.isFinite(bpm) ? bpm : 90;
+        const high = energy === "high";
+        if (tempo < 70 && !high) return "melancholic";
+        if (tempo < 70 && high) return "tense";
+        if (tempo <= 120 && !high) return "chill";
+        if (tempo <= 120 && high) return "uplifting";
+        if (tempo > 120 && !high) return "dreamy";
+        return "euphoric";
+      }
+
+      function mixToMono(audioBuffer, maxSeconds) {
+        const sampleRate = audioBuffer.sampleRate;
+        const length = Math.min(
+          audioBuffer.length,
+          Math.max(1, Math.floor(maxSeconds * sampleRate)),
+        );
+        const mono = new Float32Array(length);
+        const channels = audioBuffer.numberOfChannels || 1;
+        for (let channel = 0; channel < channels; channel++) {
+          const source = audioBuffer.getChannelData(channel);
+          for (let i = 0; i < length; i++) {
+            mono[i] += source[i] / channels;
+          }
+        }
+        return mono;
+      }
+
+      function createWaveform(samples, bars) {
+        if (!samples || samples.length === 0) return [];
+        const bucket = Math.max(1, Math.floor(samples.length / bars));
+        const waveform = [];
+        for (let i = 0; i < bars; i++) {
+          const start = i * bucket;
+          const end = Math.min(samples.length, start + bucket);
+          let peak = 0;
+          for (let j = start; j < end; j++) {
+            peak = Math.max(peak, Math.abs(samples[j]));
+          }
+          waveform.push(clamp(peak, 0.02, 1));
+        }
+        return waveform;
+      }
+
+      function smooth(values, windowSize) {
+        const result = new Float32Array(values.length);
+        for (let i = 0; i < values.length; i++) {
+          let sum = 0;
+          let count = 0;
+          for (let j = -windowSize; j <= windowSize; j++) {
+            const index = i + j;
+            if (index >= 0 && index < values.length) {
+              sum += values[index];
+              count++;
+            }
+          }
+          result[i] = sum / count;
+        }
+        return result;
+      }
+
+      function estimateBpm(samples, sampleRate) {
+        if (!samples || samples.length < sampleRate * 4) return null;
+        const hop = 512;
+        const frame = 1024;
+        const envelopeLength = Math.max(0, Math.floor((samples.length - frame) / hop));
+        const envelope = new Float32Array(envelopeLength);
+
+        for (let i = 0; i < envelopeLength; i++) {
+          const start = i * hop;
+          let sum = 0;
+          for (let j = 0; j < frame; j++) {
+            const value = samples[start + j] || 0;
+            sum += value * value;
+          }
+          envelope[i] = Math.sqrt(sum / frame);
+        }
+
+        const smoothed = smooth(envelope, 3);
+        let mean = 0;
+        for (const value of smoothed) mean += value;
+        mean /= Math.max(1, smoothed.length);
+
+        let variance = 0;
+        for (const value of smoothed) variance += (value - mean) * (value - mean);
+        const std = Math.sqrt(variance / Math.max(1, smoothed.length));
+        const threshold = mean + std * 0.68;
+        const minPeakDistance = Math.floor((sampleRate * 0.24) / hop);
+        const peaks = [];
+        let lastPeak = -Infinity;
+
+        for (let i = 2; i < smoothed.length - 2; i++) {
+          const value = smoothed[i];
+          const localMax =
+            value > smoothed[i - 1] &&
+            value >= smoothed[i + 1] &&
+            value > smoothed[i - 2] &&
+            value >= smoothed[i + 2];
+          if (value > threshold && localMax && i - lastPeak >= minPeakDistance) {
+            peaks.push((i * hop) / sampleRate);
+            lastPeak = i;
+          }
+        }
+
+        if (peaks.length < 4) return null;
+
+        const bins = new Map();
+        for (let i = 0; i < peaks.length; i++) {
+          for (let j = i + 1; j < Math.min(peaks.length, i + 8); j++) {
+            const interval = peaks[j] - peaks[i];
+            if (interval < 0.32 || interval > 2.1) continue;
+            let bpm = 60 / interval;
+            while (bpm < 60) bpm *= 2;
+            while (bpm > 190) bpm /= 2;
+            const rounded = Math.round(bpm);
+            const previous = bins.get(rounded) || 0;
+            bins.set(rounded, previous + 1 / (j - i));
+          }
+        }
+
+        let bestBpm = null;
+        let bestScore = 0;
+        for (const [bpm, score] of bins.entries()) {
+          let neighborhood = score;
+          neighborhood += bins.get(bpm - 1) || 0;
+          neighborhood += bins.get(bpm + 1) || 0;
+          if (neighborhood > bestScore) {
+            bestScore = neighborhood;
+            bestBpm = bpm;
+          }
+        }
+
+        return bestBpm ? clamp(bestBpm, 45, 210) : null;
+      }
+
+      async function renderFilteredRms(mono, sampleRate, type, frequency, q) {
+        const Offline = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+        if (!Offline) return 0;
+        const offline = new Offline(1, mono.length, sampleRate);
+        const buffer = offline.createBuffer(1, mono.length, sampleRate);
+        buffer.copyToChannel(mono, 0);
+        const source = offline.createBufferSource();
+        const filter = offline.createBiquadFilter();
+        source.buffer = buffer;
+        filter.type = type;
+        filter.frequency.value = frequency;
+        if (q) filter.Q.value = q;
+        source.connect(filter);
+        filter.connect(offline.destination);
+        source.start(0);
+        const rendered = await offline.startRendering();
+        return computeRms(rendered.getChannelData(0));
+      }
+
+      async function estimateFrequencyProfile(mono, sampleRate) {
+        try {
+          const [bass, mid, treble] = await Promise.all([
+            renderFilteredRms(mono, sampleRate, "lowpass", 250, 0.7),
+            renderFilteredRms(mono, sampleRate, "bandpass", 1100, 0.8),
+            renderFilteredRms(mono, sampleRate, "highpass", 3600, 0.7),
+          ]);
+          const total = bass + mid + treble || 1;
+          const profile = {
+            bass: bass / total,
+            mid: mid / total,
+            treble: treble / total,
+          };
+          let dominantRange = "mid";
+          if (profile.bass > profile.mid && profile.bass > profile.treble) {
+            dominantRange = "bass-heavy";
+          } else if (profile.treble > profile.mid && profile.treble > profile.bass) {
+            dominantRange = "treble";
+          }
+          return { profile, dominantRange };
+        } catch (_error) {
+          return {
+            profile: { bass: 0.33, mid: 0.34, treble: 0.33 },
+            dominantRange: "mid",
+          };
+        }
+      }
+
+      function guessGenre(bpm, dominantRange, energy) {
+        const tempo = Number.isFinite(bpm) ? bpm : 90;
+        if (tempo > 135 && dominantRange === "bass-heavy") return "dance / electronic";
+        if (tempo > 125 && energy === "high") return "pop / club";
+        if (tempo >= 78 && tempo <= 110 && dominantRange === "bass-heavy") return "hip-hop / R&B";
+        if (tempo < 75 && energy !== "high") return "ambient / ballad";
+        if (dominantRange === "treble" && tempo > 115) return "indie pop / synth";
+        if (tempo >= 90 && tempo <= 125) return "alt-pop / groove";
+        return "experimental / cinematic";
+      }
+
+      function extractThemesFromTranscript(transcript) {
+        if (!transcript) return [];
+        const counts = new Map();
+        const words = transcript
+          .toLowerCase()
+          .replace(/[^a-z0-9'\s-]/g, " ")
+          .split(/\s+/)
+          .map((word) => word.replace(/^'+|'+$/g, ""))
+          .filter((word) => word.length > 2 && !STOPWORDS.has(word));
+        for (const word of words) counts.set(word, (counts.get(word) || 0) + 1);
+        return Array.from(counts.entries())
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 10)
+          .map(([word]) => word);
+      }
+
+      function instrumentalThemes(analysis) {
+        const themes = [];
+        if (analysis.mood !== "unknown") themes.push(analysis.mood);
+        if (analysis.dominantRange === "bass-heavy") themes.push("pulse", "weight", "movement");
+        if (analysis.dominantRange === "treble") themes.push("spark", "air", "glitter");
+        if (analysis.energy === "high") themes.push("momentum", "release");
+        if (analysis.energy === "low") themes.push("space", "reflection");
+        if (analysis.genre !== "unknown") themes.push(analysis.genre.split(" / ")[0]);
+        return Array.from(new Set(themes)).slice(0, 10);
+      }
+
+      function makePrompt(analysis, appType, feedback, variation) {
+        const colors = analysis.palette.colors.join(", ");
+        const themes = (analysis.themes.length ? analysis.themes : instrumentalThemes(analysis)).join(
+          ", ",
+        );
+        const bpm = Number.isFinite(analysis.bpm) ? analysis.bpm : "unknown";
+        const typeLine =
+          appType === "random"
+            ? "Choose the most fitting format yourself."
+            : `Create it as a ${appType}.`;
+        const feedbackLine = feedback
+          ? `The user feedback to account for: ${feedback}.`
+          : "No user feedback yet.";
+
+        return `You are a creative web developer. Generate a self-contained HTML+CSS+JS mini app inspired by a song with these characteristics:
+
+- Mood: ${analysis.mood}
+- Energy: ${analysis.energy}
+- BPM: ${bpm}
+- Color palette: ${analysis.palette.name} (${colors})
+- Lyric themes / keywords: ${themes || "instrumental, no lyrics detected"}
+- Genre (guessed): ${analysis.genre}
+- Dominant frequency range: ${analysis.dominantRange}
+- Variation seed: ${variation}
+
+The app should FEEL like the song. It can be a visualizer, a mini-game, an interactive poem, a mood board, a generative art piece, or anything creative. ${typeLine}
+${feedbackLine}
+
+Use only vanilla HTML, CSS, and JavaScript. Do not load external libraries, fonts, images, audio, or network resources. Make the app responsive, interactive, polished, and safe to run in a sandboxed iframe. Return ONLY a complete HTML file, nothing else.`;
+      }
+
+      function extractHtml(text) {
+        if (!text) return "";
+        const fenced = text.match(/```(?:html)?\s*([\s\S]*?)```/i);
+        let html = fenced ? fenced[1].trim() : text.trim();
+        const start = html.search(/<!doctype html>|<html[\s>]/i);
+        if (start > 0) html = html.slice(start);
+        const end = html.toLowerCase().lastIndexOf("</html>");
+        if (end >= 0) html = html.slice(0, end + 7);
+        if (!/<html[\s>]/i.test(html)) {
+          html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Generated Song App</title></head><body>${html}</body></html>`;
+        }
+        return html;
+      }
+
+      function extractAnthropicJsonText(json) {
+        if (!json) return "";
+        if (typeof json.html === "string") return json.html;
+        if (typeof json.text === "string") return json.text;
+        if (typeof json.content === "string") return json.content;
+        if (Array.isArray(json.content)) {
+          return json.content
+            .map((part) => {
+              if (typeof part === "string") return part;
+              if (part && typeof part.text === "string") return part.text;
+              return "";
+            })
+            .join("");
+        }
+        if (json.message) return extractAnthropicJsonText(json.message);
+        return "";
+      }
+
+      async function readAnthropicStream(response, onText) {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        let full = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const events = buffer.split(/\r?\n\r?\n/);
+          buffer = events.pop() || "";
+
+          for (const eventText of events) {
+            const dataLines = eventText
+              .split(/\r?\n/)
+              .filter((line) => line.startsWith("data:"))
+              .map((line) => line.slice(5).trim());
+            for (const line of dataLines) {
+              if (!line || line === "[DONE]") continue;
+              try {
+                const event = JSON.parse(line);
+                const token =
+                  event.delta?.text ||
+                  event.content_block?.text ||
+                  event.message?.content?.[0]?.text ||
+                  "";
+                if (token) {
+                  full += token;
+                  onText(full);
+                }
+              } catch (_error) {
+                full += line;
+                onText(full);
+              }
+            }
+          }
+        }
+
+        return full;
+      }
+
+      async function readPlainStream(response, onText) {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let full = "";
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          full += decoder.decode(value, { stream: true });
+          onText(full);
+        }
+        return full;
+      }
+
+      async function callClaude({ prompt, apiKey, proxyUrl, onText }) {
+        const url = proxyUrl || "https://api.anthropic.com/v1/messages";
+        if (!proxyUrl && !apiKey) {
+          throw new Error("Add an Anthropic API key or a Claude proxy URL.");
+        }
+
+        const body = {
+          model: CLAUDE_MODEL,
+          max_tokens: 6000,
+          stream: true,
+          messages: [{ role: "user", content: prompt }],
+        };
+
+        const headers = { "Content-Type": "application/json" };
+        if (!proxyUrl) {
+          headers["x-api-key"] = apiKey;
+          headers["anthropic-version"] = "2023-06-01";
+          headers["anthropic-dangerous-direct-browser-access"] = "true";
+        }
+
+        const response = await fetch(url, {
+          method: "POST",
+          headers,
+          body: JSON.stringify(body),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text().catch(() => "");
+          throw new Error(`Claude request failed (${response.status}). ${errorText.slice(0, 400)}`);
+        }
+
+        const contentType = response.headers.get("content-type") || "";
+        if (contentType.includes("text/event-stream") && response.body) {
+          return readAnthropicStream(response, onText);
+        }
+        if (contentType.includes("application/json")) {
+          const json = await response.json();
+          const text = extractAnthropicJsonText(json);
+          onText(text);
+          return text;
+        }
+        if (response.body) return readPlainStream(response, onText);
+        const text = await response.text();
+        onText(text);
+        return text;
+      }
+
+      async function callWhisper({ blob, fileName, apiKey, proxyUrl }) {
+        if (!apiKey && !proxyUrl) {
+          throw new Error("Add an OpenAI API key or a Whisper proxy URL.");
+        }
+        const form = new FormData();
+        const safeName = fileName && /\.[a-z0-9]+$/i.test(fileName) ? fileName : "song.webm";
+        form.append("file", new File([blob], safeName, { type: blob.type || "audio/webm" }));
+        form.append("model", "whisper-1");
+        form.append("response_format", "json");
+
+        const response = await fetch(proxyUrl || "https://api.openai.com/v1/audio/transcriptions", {
+          method: "POST",
+          headers: proxyUrl ? undefined : { Authorization: `Bearer ${apiKey}` },
+          body: form,
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text().catch(() => "");
+          throw new Error(`Whisper request failed (${response.status}). ${errorText.slice(0, 300)}`);
+        }
+        const json = await response.json();
+        return json.text || "";
+      }
+
+      function downloadHtml(html, name) {
+        const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement("a");
+        anchor.href = url;
+        anchor.download = `${(name || "song-app").replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase() || "song-app"}.html`;
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      function loadGallery() {
+        try {
+          return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+        } catch (_error) {
+          return [];
+        }
+      }
+
+      function saveGallery(items) {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(items.slice(0, 8)));
+        } catch (_error) {}
+      }
+
+      function Button({ children, className, ...props }) {
+        return h("button", { className: classNames("button", className), ...props }, children);
+      }
+
+      function Field({ label, children }) {
+        return h("label", { className: "field" }, h("span", null, label), children);
+      }
+
+      function Metric({ label, value }) {
+        return h(
+          "div",
+          { className: "metric" },
+          h("div", { className: "metric-label" }, label),
+          h("div", { className: "metric-value", title: String(value) }, value),
+        );
+      }
+
+      function WaveformCanvas({ waveform, isRecording, analyserRef, audioRef, palette }) {
+        const canvasRef = useRef(null);
+
+        useEffect(() => {
+          const canvas = canvasRef.current;
+          if (!canvas) return undefined;
+          const ctx = canvas.getContext("2d");
+          let raf = 0;
+          const colors = palette?.colors || palettes.chill.colors;
+
+          function fitCanvas() {
+            const rect = canvas.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            const width = Math.max(1, Math.floor(rect.width * dpr));
+            const height = Math.max(1, Math.floor(rect.height * dpr));
+            if (canvas.width !== width || canvas.height !== height) {
+              canvas.width = width;
+              canvas.height = height;
+            }
+            return { width, height, dpr };
+          }
+
+          function drawIdle(width, height) {
+            const bars = waveform && waveform.length ? waveform : Array.from({ length: 96 }, () => 0.04);
+            const gap = 2;
+            const barWidth = Math.max(2, width / bars.length - gap);
+            const center = height / 2;
+            ctx.fillStyle = "#121417";
+            ctx.fillRect(0, 0, width, height);
+            ctx.strokeStyle = "rgba(255,255,255,0.08)";
+            ctx.beginPath();
+            ctx.moveTo(0, center);
+            ctx.lineTo(width, center);
+            ctx.stroke();
+
+            for (let i = 0; i < bars.length; i++) {
+              const value = bars[i];
+              const x = i * (barWidth + gap);
+              const barHeight = Math.max(3, value * height * 0.84);
+              const hueColor = colors[i % colors.length];
+              ctx.fillStyle = hueColor;
+              ctx.globalAlpha = waveform && waveform.length ? 0.88 : 0.22;
+              ctx.fillRect(x, center - barHeight / 2, barWidth, barHeight);
+            }
+            ctx.globalAlpha = 1;
+
+            const audio = audioRef?.current;
+            if (audio && audio.duration && !audio.paused) {
+              const playX = (audio.currentTime / audio.duration) * width;
+              ctx.fillStyle = "#ffffff";
+              ctx.fillRect(playX, 0, 2, height);
+            }
+          }
+
+          function drawLive(width, height) {
+            const analyser = analyserRef.current;
+            if (!analyser) {
+              drawIdle(width, height);
+              return;
+            }
+            const data = new Uint8Array(analyser.fftSize);
+            analyser.getByteTimeDomainData(data);
+            ctx.fillStyle = "#121417";
+            ctx.fillRect(0, 0, width, height);
+            ctx.lineWidth = Math.max(2, width / 340);
+            ctx.strokeStyle = colors[0] || "#0c9b72";
+            ctx.beginPath();
+            for (let i = 0; i < data.length; i++) {
+              const x = (i / (data.length - 1)) * width;
+              const y = (data[i] / 255) * height;
+              if (i === 0) ctx.moveTo(x, y);
+              else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+            ctx.strokeStyle = colors[2] || "#ff7a45";
+            ctx.globalAlpha = 0.5;
+            ctx.beginPath();
+            for (let i = 0; i < data.length; i += 3) {
+              const x = (i / (data.length - 1)) * width;
+              const y = height - (data[i] / 255) * height;
+              if (i === 0) ctx.moveTo(x, y);
+              else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+            ctx.globalAlpha = 1;
+          }
+
+          function render() {
+            const { width, height } = fitCanvas();
+            if (isRecording) drawLive(width, height);
+            else drawIdle(width, height);
+            raf = requestAnimationFrame(render);
+          }
+
+          render();
+          window.addEventListener("resize", fitCanvas);
+          return () => {
+            cancelAnimationFrame(raf);
+            window.removeEventListener("resize", fitCanvas);
+          };
+        }, [waveform, isRecording, analyserRef, audioRef, palette]);
+
+        return h("canvas", { className: "waveform", ref: canvasRef });
+      }
+
+      function App() {
+        const [analysis, setAnalysis] = useState(emptyAnalysis);
+        const [waveform, setWaveform] = useState([]);
+        const [audioBlob, setAudioBlob] = useState(null);
+        const [audioUrl, setAudioUrl] = useState("");
+        const [isRecording, setIsRecording] = useState(false);
+        const [isAnalyzing, setIsAnalyzing] = useState(false);
+        const [isTranscribing, setIsTranscribing] = useState(false);
+        const [isGenerating, setIsGenerating] = useState(false);
+        const [status, setStatus] = useState("Ready");
+        const [error, setError] = useState("");
+        const [generatedHtml, setGeneratedHtml] = useState("");
+        const [streamText, setStreamText] = useState("");
+        const [promptText, setPromptText] = useState("");
+        const [appType, setAppType] = useState("random");
+        const [feedback, setFeedback] = useState("");
+        const [rating, setRating] = useState(0);
+        const [variation, setVariation] = useState(1);
+        const [gallery, setGallery] = useState(loadGallery);
+        const [toast, setToast] = useState("");
+        const [anthropicKey, setAnthropicKey] = useState(() => getStored(API_STORAGE.anthropicKey));
+        const [anthropicProxy, setAnthropicProxy] = useState(() =>
+          getStored(API_STORAGE.anthropicProxy),
+        );
+        const [openaiKey, setOpenaiKey] = useState(() => getStored(API_STORAGE.openaiKey));
+        const [openaiProxy, setOpenaiProxy] = useState(() => getStored(API_STORAGE.openaiProxy));
+
+        const mediaRecorderRef = useRef(null);
+        const chunksRef = useRef([]);
+        const streamRef = useRef(null);
+        const recordingContextRef = useRef(null);
+        const analyserRef = useRef(null);
+        const audioRef = useRef(null);
+
+        useEffect(() => setStored(API_STORAGE.anthropicKey, anthropicKey), [anthropicKey]);
+        useEffect(() => setStored(API_STORAGE.anthropicProxy, anthropicProxy), [anthropicProxy]);
+        useEffect(() => setStored(API_STORAGE.openaiKey, openaiKey), [openaiKey]);
+        useEffect(() => setStored(API_STORAGE.openaiProxy, openaiProxy), [openaiProxy]);
+
+        useEffect(() => {
+          if (!toast) return undefined;
+          const timeout = setTimeout(() => setToast(""), 2200);
+          return () => clearTimeout(timeout);
+        }, [toast]);
+
+        useEffect(() => {
+          return () => {
+            if (audioUrl) URL.revokeObjectURL(audioUrl);
+            streamRef.current?.getTracks().forEach((track) => track.stop());
+            recordingContextRef.current?.close?.();
+          };
+        }, [audioUrl]);
+
+        const hasAnalysis = analysis.mood !== "unknown";
+        const activeThemes = useMemo(
+          () => (analysis.themes.length ? analysis.themes : instrumentalThemes(analysis)),
+          [analysis],
+        );
+
+        const analyzeBlob = useCallback(
+          async (blob, sourceName) => {
+            setError("");
+            setIsAnalyzing(true);
+            setStatus("Decoding audio");
+            setAudioBlob(blob);
+            if (audioUrl) URL.revokeObjectURL(audioUrl);
+            const nextAudioUrl = URL.createObjectURL(blob);
+            setAudioUrl(nextAudioUrl);
+
+            try {
+              const AudioContext = window.AudioContext || window.webkitAudioContext;
+              if (!AudioContext) throw new Error("This browser does not support AudioContext.");
+              const context = new AudioContext();
+              const arrayBuffer = await blob.arrayBuffer();
+              const decoded = await context.decodeAudioData(arrayBuffer.slice(0));
+              const secondsForAnalysis = Math.min(decoded.duration, 120);
+              const mono = mixToMono(decoded, secondsForAnalysis);
+              setStatus("Finding tempo and energy");
+              const rms = computeRms(mono);
+              const energy = classifyEnergy(rms);
+              const bpm = estimateBpm(mono, decoded.sampleRate);
+              setStatus("Mapping frequency profile");
+              const { profile, dominantRange } = await estimateFrequencyProfile(mono, decoded.sampleRate);
+              const mood = deriveMood(bpm, energy);
+              const palette = palettes[mood] || palettes.chill;
+              const genre = guessGenre(bpm, dominantRange, energy);
+              const baseAnalysis = {
+                sourceName,
+                duration: decoded.duration,
+                bpm,
+                energy,
+                energyScore: Number(rms.toFixed(4)),
+                dominantRange,
+                frequencyProfile: {
+                  bass: Number(profile.bass.toFixed(3)),
+                  mid: Number(profile.mid.toFixed(3)),
+                  treble: Number(profile.treble.toFixed(3)),
+                },
+                mood,
+                palette,
+                themes: [],
+                transcript: "",
+                genre,
+              };
+              setWaveform(createWaveform(mono, 300));
+              setAnalysis(baseAnalysis);
+              setStatus("Analysis ready");
+              await context.close();
+
+              if (openaiKey || openaiProxy) {
+                await transcribeBlob(blob, sourceName, baseAnalysis);
+              }
+            } catch (caught) {
+              setError(caught.message || String(caught));
+              setStatus("Analysis failed");
+            } finally {
+              setIsAnalyzing(false);
+            }
+          },
+          [audioUrl, openaiKey, openaiProxy],
+        );
+
+        const transcribeBlob = useCallback(
+          async (blob, sourceName, currentAnalysis) => {
+            setError("");
+            setIsTranscribing(true);
+            setStatus("Transcribing vocals");
+            try {
+              const transcript = await callWhisper({
+                blob,
+                fileName: sourceName,
+                apiKey: openaiKey.trim(),
+                proxyUrl: openaiProxy.trim(),
+              });
+              const themes = extractThemesFromTranscript(transcript);
+              setAnalysis((previous) => ({
+                ...(currentAnalysis || previous),
+                transcript,
+                themes,
+              }));
+              setStatus(themes.length ? "Lyrics added to analysis" : "Transcription complete");
+            } catch (caught) {
+              setError(caught.message || String(caught));
+              setStatus("Transcription skipped");
+            } finally {
+              setIsTranscribing(false);
+            }
+          },
+          [openaiKey, openaiProxy],
+        );
+
+        async function handleFile(event) {
+          const file = event.target.files?.[0];
+          if (!file) return;
+          await analyzeBlob(file, file.name);
+          event.target.value = "";
+        }
+
+        async function startRecording() {
+          setError("");
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            streamRef.current = stream;
+            chunksRef.current = [];
+            const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+              ? "audio/webm;codecs=opus"
+              : "";
+            const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+            mediaRecorderRef.current = recorder;
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            const context = new AudioContext();
+            const source = context.createMediaStreamSource(stream);
+            const analyser = context.createAnalyser();
+            analyser.fftSize = 2048;
+            source.connect(analyser);
+            recordingContextRef.current = context;
+            analyserRef.current = analyser;
+            recorder.addEventListener("dataavailable", (event) => {
+              if (event.data && event.data.size > 0) chunksRef.current.push(event.data);
+            });
+            recorder.addEventListener("stop", async () => {
+              const blob = new Blob(chunksRef.current, {
+                type: recorder.mimeType || "audio/webm",
+              });
+              stream.getTracks().forEach((track) => track.stop());
+              await context.close();
+              analyserRef.current = null;
+              streamRef.current = null;
+              recordingContextRef.current = null;
+              setIsRecording(false);
+              await analyzeBlob(blob, `recording-${Date.now()}.webm`);
+            });
+            recorder.start();
+            setIsRecording(true);
+            setStatus("Recording");
+          } catch (caught) {
+            setError(caught.message || String(caught));
+            setStatus("Recording unavailable");
+          }
+        }
+
+        function stopRecording() {
+          const recorder = mediaRecorderRef.current;
+          if (recorder && recorder.state !== "inactive") {
+            setStatus("Finishing recording");
+            recorder.stop();
+          }
+        }
+
+        async function transcribeCurrentAudio() {
+          if (!audioBlob) return;
+          await transcribeBlob(audioBlob, analysis.sourceName, analysis);
+        }
+
+        async function generateApp(isRegeneration) {
+          if (!hasAnalysis) {
+            setError("Analyze a song first.");
+            return;
+          }
+          const nextVariation = isRegeneration ? variation + 1 : variation;
+          if (isRegeneration) setVariation(nextVariation);
+          const prompt = makePrompt(
+            analysis,
+            appType,
+            `${rating ? `rating ${rating}/5. ` : ""}${feedback}`.trim(),
+            nextVariation,
+          );
+          setPromptText(prompt);
+          setStreamText("");
+          setGeneratedHtml("");
+          setError("");
+          setIsGenerating(true);
+          setStatus(isRegeneration ? "Regenerating app" : "Generating app");
+
+          try {
+            const fullText = await callClaude({
+              prompt,
+              apiKey: anthropicKey.trim(),
+              proxyUrl: anthropicProxy.trim(),
+              onText: setStreamText,
+            });
+            const html = extractHtml(fullText);
+            setGeneratedHtml(html);
+            const item = {
+              id: `${Date.now()}`,
+              html,
+              mood: analysis.mood,
+              bpm: analysis.bpm,
+              sourceName: analysis.sourceName || "song",
+              createdAt: new Date().toISOString(),
+            };
+            setGallery((previous) => {
+              const next = [item, ...previous].slice(0, 8);
+              saveGallery(next);
+              return next;
+            });
+            setStatus("Generated app ready");
+          } catch (caught) {
+            setError(caught.message || String(caught));
+            setStatus("Generation failed");
+          } finally {
+            setIsGenerating(false);
+          }
+        }
+
+        async function copyCode() {
+          if (!generatedHtml) return;
+          await navigator.clipboard.writeText(generatedHtml);
+          setToast("Code copied");
+        }
+
+        function loadGalleryItem(item) {
+          setGeneratedHtml(item.html);
+          setStatus("Loaded saved app");
+        }
+
+        function clearGallery() {
+          setGallery([]);
+          saveGallery([]);
+          setToast("Gallery cleared");
+        }
+
+        const analysisJson = JSON.stringify(
+          {
+            sourceName: analysis.sourceName,
+            duration: formatDuration(analysis.duration),
+            bpm: analysis.bpm,
+            energy: analysis.energy,
+            energyScore: analysis.energyScore,
+            dominantRange: analysis.dominantRange,
+            frequencyProfile: analysis.frequencyProfile,
+            mood: analysis.mood,
+            colorPalette: analysis.palette,
+            lyricThemes: activeThemes,
+            genre: analysis.genre,
+            transcript: analysis.transcript,
+          },
+          null,
+          2,
+        );
+
+        return h(
+          "div",
+          { className: "app" },
+          h(
+            "header",
+            { className: "topbar" },
+            h(
+              "div",
+              { className: "topbar-inner" },
+              h(
+                "div",
+                { className: "brand" },
+                h("div", { className: "mark", "aria-hidden": "true" }, "S"),
+                h("h1", null, "Song to App"),
+              ),
+              h("div", { className: "model-chip" }, CLAUDE_MODEL),
+            ),
+          ),
+          h(
+            "main",
+            { className: "shell" },
+            h(
+              "section",
+              { className: "left-stack" },
+              h(
+                "div",
+                { className: "panel" },
+                h(
+                  "div",
+                  { className: "panel-header" },
+                  h("h2", { className: "panel-title" }, "Audio Input"),
+                  h("div", { className: "hint" }, analysis.sourceName || "No song loaded"),
+                ),
+                h(
+                  "div",
+                  { className: "panel-body" },
+                  h(
+                    "div",
+                    { className: "actions" },
+                    h(
+                      "label",
+                      { className: "file-button" },
+                      "Upload Song",
+                      h("input", {
+                        className: "hidden-input",
+                        type: "file",
+                        accept: "audio/*,.mp3,.wav,.m4a",
+                        onChange: handleFile,
+                        disabled: isRecording || isAnalyzing,
+                      }),
+                    ),
+                    h(
+                      Button,
+                      {
+                        className: isRecording ? "coral" : "",
+                        onClick: isRecording ? stopRecording : startRecording,
+                        disabled: isAnalyzing,
+                      },
+                      isRecording ? "Stop Recording" : "Record from Mic",
+                    ),
+                    h(
+                      Button,
+                      {
+                        className: "ghost",
+                        onClick: transcribeCurrentAudio,
+                        disabled: !audioBlob || isTranscribing || (!openaiKey && !openaiProxy),
+                      },
+                      isTranscribing ? "Transcribing" : "Transcribe Vocals",
+                    ),
+                  ),
+                  h(
+                    "div",
+                    { className: "status", role: "status" },
+                    (isRecording || isAnalyzing || isTranscribing || isGenerating) &&
+                      h("span", { className: "spinner", "aria-hidden": "true" }),
+                    h("span", null, status),
+                  ),
+                  h(
+                    "div",
+                    { className: "wave-wrap" },
+                    h(WaveformCanvas, {
+                      waveform,
+                      isRecording,
+                      analyserRef,
+                      audioRef,
+                      palette: analysis.palette,
+                    }),
+                  ),
+                  audioUrl &&
+                    h("audio", {
+                      ref: audioRef,
+                      controls: true,
+                      src: audioUrl,
+                    }),
+                  error && h("p", { className: "hint danger-text" }, error),
+                  h(
+                    "div",
+                    { className: "metrics" },
+                    h(Metric, {
+                      label: "BPM",
+                      value: Number.isFinite(analysis.bpm) ? analysis.bpm : "Unknown",
+                    }),
+                    h(Metric, { label: "Mood", value: analysis.mood }),
+                    h(Metric, { label: "Energy", value: analysis.energy }),
+                  ),
+                  h(
+                    "div",
+                    { className: "metrics" },
+                    h(Metric, { label: "Frequency", value: analysis.dominantRange }),
+                    h(Metric, { label: "Genre", value: analysis.genre }),
+                    h(Metric, { label: "Length", value: formatDuration(analysis.duration) }),
+                  ),
+                  h(
+                    "div",
+                    { className: "palette", "aria-label": "Color palette" },
+                    analysis.palette.colors.map((color) =>
+                      h("span", {
+                        key: color,
+                        className: "swatch",
+                        title: color,
+                        style: { backgroundColor: color },
+                      }),
+                    ),
+                  ),
+                ),
+                h(
+                  "details",
+                  null,
+                  h("summary", null, "Analysis Data", h("span", null, "+")),
+                  h("div", { className: "details-body" }, h("pre", { className: "json-view" }, analysisJson)),
+                ),
+              ),
+              h(
+                "div",
+                { className: "panel" },
+                h(
+                  "div",
+                  { className: "panel-header" },
+                  h("h2", { className: "panel-title" }, "Generation"),
+                  h("div", { className: "hint" }, activeThemes.slice(0, 3).join(", ") || "Themes pending"),
+                ),
+                h(
+                  "div",
+                  { className: "panel-body field-grid" },
+                  h(
+                    Field,
+                    { label: "App Type" },
+                    h(
+                      "div",
+                      { className: "segmented" },
+                      ["random", "visualizer", "game", "art", "poem", "mood board"].map((type) =>
+                        h(
+                          "button",
+                          {
+                            key: type,
+                            type: "button",
+                            className: classNames("segment", appType === type && "active"),
+                            onClick: () => setAppType(type),
+                          },
+                          type.replace(/\b\w/g, (letter) => letter.toUpperCase()),
+                        ),
+                      ),
+                    ),
+                  ),
+                  h(
+                    Field,
+                    { label: "Feedback" },
+                    h("textarea", {
+                      value: feedback,
+                      onChange: (event) => setFeedback(event.target.value),
+                      placeholder: "More playful, calmer, stranger, more like a game...",
+                    }),
+                  ),
+                  h(
+                    Field,
+                    { label: "Creative Match" },
+                    h(
+                      "select",
+                      {
+                        value: rating,
+                        onChange: (event) => setRating(Number(event.target.value)),
+                      },
+                      h("option", { value: 0 }, "Not rated"),
+                      h("option", { value: 1 }, "1 - Missed it"),
+                      h("option", { value: 2 }, "2 - Close"),
+                      h("option", { value: 3 }, "3 - Good"),
+                      h("option", { value: 4 }, "4 - Strong"),
+                      h("option", { value: 5 }, "5 - Perfect"),
+                    ),
+                  ),
+                  h(
+                    "div",
+                    { className: "chips" },
+                    activeThemes.map((theme) => h("span", { className: "chip", key: theme }, theme)),
+                  ),
+                  h(
+                    "div",
+                    { className: "actions" },
+                    h(
+                      Button,
+                      {
+                        className: "primary",
+                        onClick: () => generateApp(false),
+                        disabled: !hasAnalysis || isGenerating,
+                      },
+                      isGenerating ? "Generating" : "Generate App",
+                    ),
+                    h(
+                      Button,
+                      {
+                        onClick: () => generateApp(true),
+                        disabled: !hasAnalysis || isGenerating,
+                      },
+                      "Regenerate",
+                    ),
+                  ),
+                ),
+                h(
+                  "details",
+                  null,
+                  h("summary", null, "Prompt", h("span", null, "+")),
+                  h(
+                    "div",
+                    { className: "details-body" },
+                    h("pre", { className: "stream-view" }, promptText || "Generated prompt will appear here."),
+                  ),
+                ),
+                h(
+                  "details",
+                  { open: isGenerating || Boolean(streamText && !generatedHtml) },
+                  h("summary", null, "Claude Stream", h("span", null, "+")),
+                  h(
+                    "div",
+                    { className: "details-body" },
+                    h("pre", { className: "stream-view" }, streamText || "Waiting for generation."),
+                  ),
+                ),
+              ),
+              h(
+                "div",
+                { className: "panel" },
+                h(
+                  "div",
+                  { className: "panel-header" },
+                  h("h2", { className: "panel-title" }, "API Settings"),
+                  h("div", { className: "hint" }, "Session only"),
+                ),
+                h(
+                  "div",
+                  { className: "panel-body field-grid" },
+                  h(
+                    "div",
+                    { className: "field-row" },
+                    h(
+                      Field,
+                      { label: "Anthropic Key" },
+                      h("input", {
+                        type: "password",
+                        value: anthropicKey,
+                        onChange: (event) => setAnthropicKey(event.target.value),
+                        placeholder: "sk-ant-...",
+                        autoComplete: "off",
+                      }),
+                    ),
+                    h(
+                      Field,
+                      { label: "Claude Proxy URL" },
+                      h("input", {
+                        value: anthropicProxy,
+                        onChange: (event) => setAnthropicProxy(event.target.value),
+                        placeholder: "https://your-proxy/messages",
+                      }),
+                    ),
+                  ),
+                  h(
+                    "div",
+                    { className: "field-row" },
+                    h(
+                      Field,
+                      { label: "OpenAI Key" },
+                      h("input", {
+                        type: "password",
+                        value: openaiKey,
+                        onChange: (event) => setOpenaiKey(event.target.value),
+                        placeholder: "sk-...",
+                        autoComplete: "off",
+                      }),
+                    ),
+                    h(
+                      Field,
+                      { label: "Whisper Proxy URL" },
+                      h("input", {
+                        value: openaiProxy,
+                        onChange: (event) => setOpenaiProxy(event.target.value),
+                        placeholder: "https://your-proxy/transcriptions",
+                      }),
+                    ),
+                  ),
+                  h(
+                    "p",
+                    { className: "hint" },
+                    "Use proxy URLs to keep keys server-side. Direct browser calls are convenient for local testing and keep keys in this tab's session storage.",
+                  ),
+                ),
+              ),
+            ),
+            h(
+              "section",
+              { className: "right-stack" },
+              h(
+                "div",
+                { className: "panel preview-shell" },
+                h(
+                  "div",
+                  { className: "preview-toolbar" },
+                  h("h2", { className: "panel-title" }, "Generated App"),
+                  h(
+                    "div",
+                    { className: "actions" },
+                    h(
+                      Button,
+                      {
+                        onClick: () => generateApp(true),
+                        disabled: !hasAnalysis || isGenerating,
+                      },
+                      "Regenerate",
+                    ),
+                    h(
+                      Button,
+                      {
+                        onClick: copyCode,
+                        disabled: !generatedHtml,
+                      },
+                      "Copy Code",
+                    ),
+                    h(
+                      Button,
+                      {
+                        onClick: () => downloadHtml(generatedHtml, analysis.sourceName || "generated-song-app"),
+                        disabled: !generatedHtml,
+                      },
+                      "Download",
+                    ),
+                  ),
+                ),
+                h(
+                  "div",
+                  { className: "preview-frame-wrap" },
+                  generatedHtml
+                    ? h("iframe", {
+                        title: "Generated song app",
+                        sandbox: "allow-scripts allow-forms",
+                        srcDoc: generatedHtml,
+                      })
+                    : h(
+                        "div",
+                        { className: "empty-preview" },
+                        "Analyze a song, then generate a mini app.",
+                      ),
+                ),
+              ),
+              h(
+                "div",
+                { className: "panel" },
+                h(
+                  "div",
+                  { className: "panel-header" },
+                  h("h2", { className: "panel-title" }, "Gallery"),
+                  h(
+                    "div",
+                    { className: "actions" },
+                    h(
+                      Button,
+                      { className: "ghost", onClick: clearGallery, disabled: gallery.length === 0 },
+                      "Clear",
+                    ),
+                  ),
+                ),
+                h(
+                  "div",
+                  { className: "panel-body" },
+                  gallery.length
+                    ? h(
+                        "div",
+                        { className: "gallery-grid" },
+                        gallery.map((item) =>
+                          h(
+                            "div",
+                            { className: "gallery-item", key: item.id },
+                            h("div", { className: "gallery-name", title: item.sourceName }, item.sourceName),
+                            h(
+                              "div",
+                              { className: "gallery-meta" },
+                              `${item.mood || "mood"} ${
+                                Number.isFinite(item.bpm) ? `- ${item.bpm} BPM` : ""
+                              }`,
+                            ),
+                            h(
+                              Button,
+                              { onClick: () => loadGalleryItem(item), className: "ghost" },
+                              "Load",
+                            ),
+                          ),
+                        ),
+                      )
+                    : h("div", { className: "hint" }, "Generated apps are saved here in localStorage."),
+                ),
+              ),
+            ),
+          ),
+          toast && h("div", { className: "toast" }, toast),
+        );
+      }
+
+      ReactDOM.createRoot(document.getElementById("root")).render(h(App));
+    </script>
+  </body>
+</html>
