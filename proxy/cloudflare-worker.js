@@ -6,7 +6,9 @@ function corsHeaders(env) {
   return {
     "access-control-allow-origin": env.ALLOWED_ORIGIN || "*",
     "access-control-allow-methods": "POST, OPTIONS",
-    "access-control-allow-headers": "content-type, authorization, anthropic-version",
+    "access-control-allow-headers":
+      "content-type, authorization, anthropic-version, x-api-key, anthropic-dangerous-direct-browser-access",
+    "access-control-max-age": "86400",
   };
 }
 
@@ -34,17 +36,21 @@ async function proxyClaude(request, env) {
     return jsonResponse({ error: "Missing ANTHROPIC_API_KEY" }, 500, env);
   }
 
-  const upstream = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      "x-api-key": env.ANTHROPIC_API_KEY,
-      "anthropic-version": env.ANTHROPIC_VERSION || "2023-06-01",
-    },
-    body: await request.text(),
-  });
+  try {
+    const upstream = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": env.ANTHROPIC_API_KEY,
+        "anthropic-version": env.ANTHROPIC_VERSION || "2023-06-01",
+      },
+      body: await request.text(),
+    });
 
-  return withCors(upstream, env);
+    return withCors(upstream, env);
+  } catch (error) {
+    return jsonResponse({ error: "Claude upstream unavailable", detail: error.message }, 502, env);
+  }
 }
 
 async function proxyWhisper(request, env) {
@@ -57,16 +63,20 @@ async function proxyWhisper(request, env) {
     return jsonResponse({ error: "Expected multipart/form-data" }, 400, env);
   }
 
-  const upstream = await fetch("https://api.openai.com/v1/audio/transcriptions", {
-    method: "POST",
-    headers: {
-      authorization: `Bearer ${env.OPENAI_API_KEY}`,
-      "content-type": contentType,
-    },
-    body: request.body,
-  });
+  try {
+    const upstream = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${env.OPENAI_API_KEY}`,
+        "content-type": contentType,
+      },
+      body: request.body,
+    });
 
-  return withCors(upstream, env);
+    return withCors(upstream, env);
+  } catch (error) {
+    return jsonResponse({ error: "Whisper upstream unavailable", detail: error.message }, 502, env);
+  }
 }
 
 export default {

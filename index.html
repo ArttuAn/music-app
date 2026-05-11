@@ -521,6 +521,17 @@
         gap: 8px;
       }
 
+      .gallery-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .gallery-actions .button {
+        min-height: 34px;
+        padding: 0 10px;
+      }
+
       .gallery-name {
         font-weight: 820;
         white-space: nowrap;
@@ -664,6 +675,21 @@
         genre: "unknown",
       };
 
+      const sampleAnalysis = {
+        sourceName: "sample-neon-pulse",
+        duration: 97,
+        bpm: 118,
+        energy: "high",
+        energyScore: 0.1372,
+        dominantRange: "bass-heavy",
+        frequencyProfile: { bass: 0.46, mid: 0.34, treble: 0.2 },
+        mood: "uplifting",
+        palette: palettes.uplifting,
+        themes: ["pulse", "neon", "lift", "motion", "chorus"],
+        transcript: "",
+        genre: "pop / club",
+      };
+
       function classNames() {
         return Array.from(arguments).filter(Boolean).join(" ");
       }
@@ -755,6 +781,16 @@
           waveform.push(clamp(peak, 0.02, 1));
         }
         return waveform;
+      }
+
+      function createSampleWaveform(bars) {
+        return Array.from({ length: bars }, (_, index) => {
+          const progress = index / Math.max(1, bars - 1);
+          const kick = Math.pow(Math.max(0, Math.sin(progress * Math.PI * 38)), 7);
+          const phrase = 0.18 + 0.22 * Math.sin(progress * Math.PI * 6 + 0.8);
+          const shimmer = 0.08 * Math.sin(progress * Math.PI * 91);
+          return clamp(0.08 + phrase + kick * 0.66 + shimmer, 0.04, 0.98);
+        });
       }
 
       function smooth(values, windowSize) {
@@ -1276,6 +1312,43 @@ draw(0);
         );
       }
 
+      function formatDateTime(value) {
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return "";
+        return date.toLocaleString(undefined, {
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      }
+
+      async function copyText(text) {
+        if (!text) return false;
+        if (navigator.clipboard?.writeText) {
+          try {
+            await navigator.clipboard.writeText(text);
+            return true;
+          } catch (_error) {}
+        }
+
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "fixed";
+        textarea.style.left = "-9999px";
+        textarea.style.top = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+          return document.execCommand("copy");
+        } catch (_error) {
+          return false;
+        } finally {
+          textarea.remove();
+        }
+      }
+
       function downloadText(text, name, type) {
         const blob = new Blob([text], { type });
         const url = URL.createObjectURL(blob);
@@ -1298,15 +1371,34 @@ draw(0);
 
       function loadGallery() {
         try {
-          return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+          return normalizeGallery(JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"));
         } catch (_error) {
           return [];
         }
       }
 
+      function normalizeGallery(items) {
+        if (!Array.isArray(items)) return [];
+        return items
+          .map((item, index) => {
+            if (!item || typeof item.html !== "string" || !item.html.trim()) return null;
+            return {
+              id: String(item.id || `${Date.now()}-${index}`),
+              html: item.html,
+              engine: item.engine || "App",
+              mood: item.mood || "unknown",
+              bpm: Number.isFinite(item.bpm) ? item.bpm : null,
+              sourceName: item.sourceName || "song",
+              createdAt: item.createdAt || new Date().toISOString(),
+            };
+          })
+          .filter(Boolean)
+          .slice(0, 8);
+      }
+
       function saveGallery(items) {
         try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(items.slice(0, 8)));
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(normalizeGallery(items)));
         } catch (_error) {}
       }
 
@@ -1491,6 +1583,24 @@ draw(0);
           [analysis],
         );
 
+        function loadSampleAnalysis() {
+          if (audioUrl) URL.revokeObjectURL(audioUrl);
+          setAudioBlob(null);
+          setAudioUrl("");
+          setWaveform(createSampleWaveform(300));
+          setAnalysis({
+            ...sampleAnalysis,
+            frequencyProfile: { ...sampleAnalysis.frequencyProfile },
+            themes: [...sampleAnalysis.themes],
+          });
+          setGeneratedHtml("");
+          setPromptText("");
+          setStreamText("");
+          setError("");
+          setStatus("Sample analysis ready");
+          setToast("Sample loaded");
+        }
+
         const analyzeBlob = useCallback(
           async (blob, sourceName) => {
             setError("");
@@ -1593,6 +1703,12 @@ draw(0);
         async function startRecording() {
           setError("");
           try {
+            if (!navigator.mediaDevices?.getUserMedia) {
+              throw new Error("This browser does not support microphone capture.");
+            }
+            if (!window.MediaRecorder) {
+              throw new Error("This browser does not support MediaRecorder.");
+            }
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             streamRef.current = stream;
             chunksRef.current = [];
@@ -1726,13 +1842,11 @@ draw(0);
 
         async function copyCode() {
           if (!generatedHtml) return;
-          await navigator.clipboard.writeText(generatedHtml);
-          setToast("Code copied");
+          setToast((await copyText(generatedHtml)) ? "Code copied" : "Copy unavailable");
         }
 
         async function copyAnalysis() {
-          await navigator.clipboard.writeText(analysisJson);
-          setToast("Analysis copied");
+          setToast((await copyText(analysisJson)) ? "Analysis copied" : "Copy unavailable");
         }
 
         function downloadAnalysis() {
@@ -1745,7 +1859,22 @@ draw(0);
 
         function loadGalleryItem(item) {
           setGeneratedHtml(item.html);
+          setStreamText(`Loaded ${item.engine || "saved"} app from gallery.`);
+          setError("");
           setStatus("Loaded saved app");
+        }
+
+        function downloadGalleryItem(item) {
+          downloadHtml(item.html, item.sourceName || "saved-song-app");
+        }
+
+        function deleteGalleryItem(id) {
+          setGallery((previous) => {
+            const next = previous.filter((item) => item.id !== id);
+            saveGallery(next);
+            return next;
+          });
+          setToast("Saved app removed");
         }
 
         function clearGallery() {
@@ -1821,8 +1950,17 @@ draw(0);
                         type: "file",
                         accept: "audio/*,.mp3,.wav,.m4a",
                         onChange: handleFile,
-                        disabled: isRecording || isAnalyzing,
+                        disabled: isRecording || isAnalyzing || isGenerating,
                       }),
+                    ),
+                    h(
+                      Button,
+                      {
+                        className: "ghost",
+                        onClick: loadSampleAnalysis,
+                        disabled: isRecording || isAnalyzing || isGenerating,
+                      },
+                      "Try Sample",
                     ),
                     h(
                       Button,
@@ -2193,14 +2331,33 @@ draw(0);
                             h(
                               "div",
                               { className: "gallery-meta" },
-                              `${item.engine || "App"} - ${item.mood || "mood"} ${
-                                Number.isFinite(item.bpm) ? `- ${item.bpm} BPM` : ""
-                              }`,
+                              [
+                                item.engine || "App",
+                                item.mood || "mood",
+                                Number.isFinite(item.bpm) ? `${item.bpm} BPM` : "",
+                                formatDateTime(item.createdAt),
+                              ]
+                                .filter(Boolean)
+                                .join(" - "),
                             ),
                             h(
-                              Button,
-                              { onClick: () => loadGalleryItem(item), className: "ghost" },
-                              "Load",
+                              "div",
+                              { className: "gallery-actions" },
+                              h(
+                                Button,
+                                { onClick: () => loadGalleryItem(item), className: "ghost" },
+                                "Load",
+                              ),
+                              h(
+                                Button,
+                                { onClick: () => downloadGalleryItem(item), className: "ghost" },
+                                "Download",
+                              ),
+                              h(
+                                Button,
+                                { onClick: () => deleteGalleryItem(item.id), className: "ghost" },
+                                "Remove",
+                              ),
                             ),
                           ),
                         ),

@@ -35,6 +35,7 @@ Audio Input -> Analysis -> Prompt Synthesis -> Claude API -> Rendered App
 
 - Upload `.mp3`, `.wav`, `.m4a`, or other browser-supported audio files.
 - Record directly from the microphone with `MediaRecorder`.
+- Load a built-in sample analysis to explore the app without audio or API keys.
 - Draw a live waveform while recording and a static waveform after analysis.
 - Estimate BPM with peak detection over a smoothed energy envelope.
 - Classify energy from RMS amplitude.
@@ -79,7 +80,7 @@ Serving from localhost is recommended because microphone permissions work more r
 
 ## Demo Mode
 
-After analyzing a song, click **Demo Generate** to create a local generative visual app without calling Claude. This is useful for testing audio analysis, gallery saving, copy/download controls, and iframe rendering before API keys or proxies are configured.
+Click **Try Sample** to load a built-in analysis, or analyze your own song first. Then click **Demo Generate** to create a local generative visual app without calling Claude. This is useful for testing the generation flow, gallery saving, copy/download controls, and iframe rendering before API keys or proxies are configured.
 
 ## API Keys And Proxies
 
