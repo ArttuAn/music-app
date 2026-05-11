@@ -1,0 +1,15 @@
+# Local/editor noise
+.DS_Store
+Thumbs.db
+*.log
+
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+
+# Dependency/build folders if the project grows later
+node_modules/
+dist/
+build/
+.wrangler/

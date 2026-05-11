@@ -12,7 +12,7 @@
   <img alt="No build step" src="https://img.shields.io/badge/no_build_step-HTML%20%2B%20React-0C9B72">
   <img alt="Audio analysis" src="https://img.shields.io/badge/audio-Web%20Audio%20API-3156D4">
   <img alt="Claude model" src="https://img.shields.io/badge/Claude-claude--sonnet--4--20250514-F05D3C">
-  <img alt="License" src="https://img.shields.io/badge/license-unlicensed-lightgrey">
+  <img alt="License" src="https://img.shields.io/badge/license-MIT-lightgrey">
 </p>
 
 ![Song to App interface preview](./assets/app-preview.svg)
@@ -43,9 +43,11 @@ Audio Input -> Analysis -> Prompt Synthesis -> Claude API -> Rendered App
 - Optionally send audio to Whisper for lyrics and vocal themes.
 - Generate a structured Claude prompt from the analysis.
 - Stream Claude output and parse the returned HTML.
+- Generate a local demo app without API keys for first-run testing.
 - Render the generated app inline with `iframe srcDoc`.
 - Regenerate with a variation seed and user feedback.
 - Copy or download the generated HTML.
+- Copy or download the analysis JSON.
 - Save recent generated apps in `localStorage`.
 
 ## Mood Mapping
@@ -74,6 +76,10 @@ http://127.0.0.1:5173/
 ```
 
 Serving from localhost is recommended because microphone permissions work more reliably from a secure context or localhost than from a plain `file://` URL.
+
+## Demo Mode
+
+After analyzing a song, click **Demo Generate** to create a local generative visual app without calling Claude. This is useful for testing audio analysis, gallery saving, copy/download controls, and iframe rendering before API keys or proxies are configured.
 
 ## API Keys And Proxies
 
@@ -106,6 +112,18 @@ https://api.openai.com/v1/audio/transcriptions
 
 Each proxy should add the provider API key on the server side, then return the provider response to the browser.
 
+An optional Cloudflare Worker proxy is included at [`proxy/cloudflare-worker.js`](./proxy/cloudflare-worker.js). See [`proxy/README.md`](./proxy/README.md) for local development and secret setup.
+
+## GitHub Pages
+
+This repo includes a GitHub Actions workflow at [`.github/workflows/pages.yml`](./.github/workflows/pages.yml). To publish the app:
+
+1. In GitHub, open **Settings -> Pages**.
+2. Set **Source** to **GitHub Actions**.
+3. Push to `main` or run the workflow manually.
+
+Because the app is static, the deployed site is the same `index.html` that runs locally.
+
 ## Claude Prompt Shape
 
 The generated prompt includes:
@@ -126,13 +144,18 @@ Claude is instructed to return only one complete HTML file using vanilla HTML, C
 
 ```text
 .
+|-- .github/workflows/pages.yml
 |-- index.html
+|-- LICENSE
 |-- README.md
-`-- assets/
+|-- assets/
     |-- app-preview.svg
     |-- logo.svg
     |-- pipeline.svg
     `-- social-preview.svg
+`-- proxy/
+    |-- cloudflare-worker.js
+    `-- README.md
 ```
 
 ## Browser Support
@@ -144,17 +167,20 @@ Modern Chromium, Firefox, and Safari should support the core flow. Exact recordi
 - BPM detection is heuristic and may be wrong for quiet intros, tempo changes, swung rhythm, or sparse percussion.
 - Genre detection is intentionally lightweight and based on tempo, energy, and frequency profile.
 - Whisper transcription requires an OpenAI key or proxy.
-- Claude generation requires an Anthropic key or proxy.
+- Claude generation requires an Anthropic key or proxy. Demo generation works without either.
 - Direct API calls from the browser are for local testing only.
 
 ## Roadmap
 
-- Add a tiny backend proxy template for Cloudflare Workers, Vercel, or Netlify.
-- Add GitHub Pages deployment.
+- Add Vercel and Netlify proxy templates.
 - Add visual waveform thumbnails to saved gallery items.
 - Add Spotify URL support through Spotify audio features.
 - Add export bundles with metadata and preview images.
 - Add stronger beat tracking and onset detection.
+
+## License
+
+MIT. See [LICENSE](./LICENSE).
 
 ## Credits
 

@@ -978,6 +978,151 @@ Use only vanilla HTML, CSS, and JavaScript. Do not load external libraries, font
         return html;
       }
 
+      function escapeHtml(value) {
+        const replacements = {
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;",
+        };
+        return String(value ?? "").replace(/[&<>"']/g, (char) => replacements[char]);
+      }
+
+      function safeColor(color, fallback) {
+        return /^#[0-9a-f]{6}$/i.test(color || "") ? color : fallback;
+      }
+
+      function generateDemoHtml(analysis, appType, variation) {
+        const colors = (analysis.palette?.colors || palettes.chill.colors).map((color, index) =>
+          safeColor(color, palettes.chill.colors[index % palettes.chill.colors.length]),
+        );
+        const bpm = Number.isFinite(analysis.bpm) ? analysis.bpm : 96;
+        const beatMs = Math.round(60000 / clamp(bpm, 45, 190));
+        const themes = (analysis.themes.length ? analysis.themes : instrumentalThemes(analysis))
+          .slice(0, 7)
+          .map(escapeHtml);
+        const title = `${escapeHtml(analysis.mood)} ${escapeHtml(appType === "random" ? "song app" : appType)}`;
+        const colorJson = JSON.stringify(colors);
+        const themeJson = JSON.stringify(themes);
+
+        return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${title}</title>
+<style>
+  :root {
+    --c0: ${colors[0]};
+    --c1: ${colors[1]};
+    --c2: ${colors[2]};
+    --c3: ${colors[3]};
+    --ink: #f8fbff;
+    --shade: #101217;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; background: var(--shade); color: var(--ink); font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+  body { overflow: hidden; }
+  main { min-height: 100vh; display: grid; place-items: center; padding: 28px; background:
+    radial-gradient(circle at 18% 18%, color-mix(in srgb, var(--c0), transparent 48%), transparent 34%),
+    radial-gradient(circle at 82% 22%, color-mix(in srgb, var(--c2), transparent 58%), transparent 32%),
+    linear-gradient(135deg, #101217, #20242b 58%, #121417); }
+  .frame { width: min(100%, 980px); min-height: min(680px, calc(100vh - 56px)); border: 1px solid rgba(255,255,255,.22); border-radius: 18px; position: relative; overflow: hidden; background: rgba(8,10,14,.78); box-shadow: 0 24px 70px rgba(0,0,0,.36); }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .content { position: relative; z-index: 2; min-height: inherit; display: grid; grid-template-rows: 1fr auto; padding: clamp(22px, 5vw, 54px); pointer-events: none; }
+  h1 { margin: 0; max-width: 760px; font-size: clamp(3rem, 9vw, 7.5rem); line-height: .86; letter-spacing: 0; text-transform: uppercase; }
+  .meta { align-self: end; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .pill { border: 1px solid rgba(255,255,255,.24); border-radius: 999px; padding: 9px 13px; background: rgba(255,255,255,.08); backdrop-filter: blur(10px); font-weight: 800; }
+  .themes { position: absolute; right: clamp(18px, 4vw, 42px); top: clamp(18px, 4vw, 42px); z-index: 3; display: grid; gap: 8px; text-align: right; }
+  .theme { color: rgba(255,255,255,.78); font-size: clamp(.78rem, 1.5vw, 1rem); font-weight: 800; text-transform: uppercase; }
+  .hint { position: absolute; left: clamp(18px, 4vw, 42px); bottom: clamp(18px, 4vw, 42px); z-index: 3; color: rgba(255,255,255,.62); font-size: .92rem; }
+  @media (max-width: 700px) {
+    .frame { min-height: calc(100vh - 32px); border-radius: 12px; }
+    .themes { text-align: left; left: 22px; right: auto; top: auto; bottom: 74px; }
+    .hint { display: none; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <section class="frame" aria-label="Generated demo app">
+    <canvas id="stage"></canvas>
+    <div class="themes">${themes.map((theme) => `<div class="theme">${theme}</div>`).join("")}</div>
+    <div class="content">
+      <h1>${escapeHtml(analysis.mood)}<br>${escapeHtml(analysis.energy)}</h1>
+      <div class="meta">
+        <span class="pill">${Math.round(bpm)} BPM</span>
+        <span class="pill">${escapeHtml(analysis.dominantRange)}</span>
+        <span class="pill">${escapeHtml(analysis.genre)}</span>
+      </div>
+    </div>
+    <div class="hint">Move the pointer to bend the song field.</div>
+  </section>
+</main>
+<script>
+const canvas = document.getElementById("stage");
+const ctx = canvas.getContext("2d");
+const colors = ${colorJson};
+const themes = ${themeJson};
+const beatMs = ${beatMs};
+const variation = ${Number(variation) || 1};
+let pointer = { x: 0.5, y: 0.5 };
+function fit() {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = Math.max(1, Math.floor(rect.width * dpr));
+  canvas.height = Math.max(1, Math.floor(rect.height * dpr));
+}
+function draw(time) {
+  const w = canvas.width;
+  const h = canvas.height;
+  const beat = (Math.sin((time / beatMs) * Math.PI * 2) + 1) / 2;
+  ctx.clearRect(0, 0, w, h);
+  ctx.globalCompositeOperation = "source-over";
+  ctx.fillStyle = "rgba(8,10,14,.26)";
+  ctx.fillRect(0, 0, w, h);
+  ctx.globalCompositeOperation = "lighter";
+  for (let i = 0; i < 42; i++) {
+    const p = i / 42;
+    const radius = (42 + beat * 58 + (i % 7) * 16) * (w / 980);
+    const angle = time * 0.00018 * (i % 2 ? 1 : -1) + p * Math.PI * 2 + variation;
+    const x = w * (0.5 + Math.cos(angle) * (0.16 + pointer.x * 0.18));
+    const y = h * (0.5 + Math.sin(angle * 1.4) * (0.18 + pointer.y * 0.16));
+    const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
+    gradient.addColorStop(0, colors[i % colors.length] + "dd");
+    gradient.addColorStop(1, colors[(i + 2) % colors.length] + "00");
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalCompositeOperation = "source-over";
+  ctx.strokeStyle = "rgba(255,255,255,.58)";
+  ctx.lineWidth = Math.max(2, w / 420);
+  ctx.beginPath();
+  for (let i = 0; i < 96; i++) {
+    const x = (i / 95) * w;
+    const noise = Math.sin(i * 0.54 + time * 0.006 + variation) * 0.28 + Math.sin(i * 0.17 + time * 0.002) * 0.18;
+    const y = h * (0.54 + noise * (0.3 + beat * 0.28));
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  requestAnimationFrame(draw);
+}
+window.addEventListener("resize", fit);
+window.addEventListener("pointermove", (event) => {
+  pointer.x = event.clientX / Math.max(1, window.innerWidth);
+  pointer.y = event.clientY / Math.max(1, window.innerHeight);
+});
+fit();
+draw(0);
+<\/script>
+</body>
+</html>`;
+      }
+
       function extractAnthropicJsonText(json) {
         if (!json) return "";
         if (typeof json.html === "string") return json.html;
@@ -1122,16 +1267,33 @@ Use only vanilla HTML, CSS, and JavaScript. Do not load external libraries, font
         return json.text || "";
       }
 
-      function downloadHtml(html, name) {
-        const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+      function normalizeFileName(name, fallback) {
+        return (
+          (name || fallback)
+            .replace(/[^a-z0-9]+/gi, "-")
+            .replace(/^-|-$/g, "")
+            .toLowerCase() || fallback
+        );
+      }
+
+      function downloadText(text, name, type) {
+        const blob = new Blob([text], { type });
         const url = URL.createObjectURL(blob);
         const anchor = document.createElement("a");
         anchor.href = url;
-        anchor.download = `${(name || "song-app").replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase() || "song-app"}.html`;
+        anchor.download = name;
         document.body.appendChild(anchor);
         anchor.click();
         anchor.remove();
         URL.revokeObjectURL(url);
+      }
+
+      function downloadHtml(html, name) {
+        downloadText(
+          html,
+          `${normalizeFileName(name, "song-app")}.html`,
+          "text/html;charset=utf-8",
+        );
       }
 
       function loadGallery() {
@@ -1484,6 +1646,23 @@ Use only vanilla HTML, CSS, and JavaScript. Do not load external libraries, font
           await transcribeBlob(audioBlob, analysis.sourceName, analysis);
         }
 
+        function saveGeneratedApp(html, engine) {
+          const item = {
+            id: `${Date.now()}`,
+            html,
+            engine,
+            mood: analysis.mood,
+            bpm: analysis.bpm,
+            sourceName: analysis.sourceName || "song",
+            createdAt: new Date().toISOString(),
+          };
+          setGallery((previous) => {
+            const next = [item, ...previous].slice(0, 8);
+            saveGallery(next);
+            return next;
+          });
+        }
+
         async function generateApp(isRegeneration) {
           if (!hasAnalysis) {
             setError("Analyze a song first.");
@@ -1513,19 +1692,7 @@ Use only vanilla HTML, CSS, and JavaScript. Do not load external libraries, font
             });
             const html = extractHtml(fullText);
             setGeneratedHtml(html);
-            const item = {
-              id: `${Date.now()}`,
-              html,
-              mood: analysis.mood,
-              bpm: analysis.bpm,
-              sourceName: analysis.sourceName || "song",
-              createdAt: new Date().toISOString(),
-            };
-            setGallery((previous) => {
-              const next = [item, ...previous].slice(0, 8);
-              saveGallery(next);
-              return next;
-            });
+            saveGeneratedApp(html, "Claude");
             setStatus("Generated app ready");
           } catch (caught) {
             setError(caught.message || String(caught));
@@ -1535,10 +1702,45 @@ Use only vanilla HTML, CSS, and JavaScript. Do not load external libraries, font
           }
         }
 
+        function generateDemoApp() {
+          if (!hasAnalysis) {
+            setError("Analyze a song first.");
+            return;
+          }
+          const nextVariation = variation + 1;
+          setVariation(nextVariation);
+          const prompt = makePrompt(
+            analysis,
+            appType,
+            `${rating ? `rating ${rating}/5. ` : ""}${feedback}`.trim(),
+            nextVariation,
+          );
+          const html = generateDemoHtml(analysis, appType, nextVariation);
+          setPromptText(prompt);
+          setStreamText("Demo generation ran locally. Add an Anthropic key or proxy for Claude output.");
+          setGeneratedHtml(html);
+          saveGeneratedApp(html, "Demo");
+          setError("");
+          setStatus("Demo app ready");
+        }
+
         async function copyCode() {
           if (!generatedHtml) return;
           await navigator.clipboard.writeText(generatedHtml);
           setToast("Code copied");
+        }
+
+        async function copyAnalysis() {
+          await navigator.clipboard.writeText(analysisJson);
+          setToast("Analysis copied");
+        }
+
+        function downloadAnalysis() {
+          downloadText(
+            analysisJson,
+            `${normalizeFileName(analysis.sourceName || "song-analysis", "song-analysis")}.json`,
+            "application/json;charset=utf-8",
+          );
         }
 
         function loadGalleryItem(item) {
@@ -1700,7 +1902,25 @@ Use only vanilla HTML, CSS, and JavaScript. Do not load external libraries, font
                   "details",
                   null,
                   h("summary", null, "Analysis Data", h("span", null, "+")),
-                  h("div", { className: "details-body" }, h("pre", { className: "json-view" }, analysisJson)),
+                  h(
+                    "div",
+                    { className: "details-body field-grid" },
+                    h(
+                      "div",
+                      { className: "actions" },
+                      h(
+                        Button,
+                        { className: "ghost", onClick: copyAnalysis, disabled: !hasAnalysis },
+                        "Copy Analysis",
+                      ),
+                      h(
+                        Button,
+                        { className: "ghost", onClick: downloadAnalysis, disabled: !hasAnalysis },
+                        "Download JSON",
+                      ),
+                    ),
+                    h("pre", { className: "json-view" }, analysisJson),
+                  ),
                 ),
               ),
               h(
@@ -1776,7 +1996,7 @@ Use only vanilla HTML, CSS, and JavaScript. Do not load external libraries, font
                         onClick: () => generateApp(false),
                         disabled: !hasAnalysis || isGenerating,
                       },
-                      isGenerating ? "Generating" : "Generate App",
+                      isGenerating ? "Generating" : "Generate with Claude",
                     ),
                     h(
                       Button,
@@ -1785,6 +2005,15 @@ Use only vanilla HTML, CSS, and JavaScript. Do not load external libraries, font
                         disabled: !hasAnalysis || isGenerating,
                       },
                       "Regenerate",
+                    ),
+                    h(
+                      Button,
+                      {
+                        className: "ghost",
+                        onClick: generateDemoApp,
+                        disabled: !hasAnalysis || isGenerating,
+                      },
+                      "Demo Generate",
                     ),
                   ),
                 ),
@@ -1928,7 +2157,7 @@ Use only vanilla HTML, CSS, and JavaScript. Do not load external libraries, font
                     : h(
                         "div",
                         { className: "empty-preview" },
-                        "Analyze a song, then generate a mini app.",
+                        "Analyze a song, then generate with Claude or try the local demo generator.",
                       ),
                 ),
               ),
@@ -1964,7 +2193,7 @@ Use only vanilla HTML, CSS, and JavaScript. Do not load external libraries, font
                             h(
                               "div",
                               { className: "gallery-meta" },
-                              `${item.mood || "mood"} ${
+                              `${item.engine || "App"} - ${item.mood || "mood"} ${
                                 Number.isFinite(item.bpm) ? `- ${item.bpm} BPM` : ""
                               }`,
                             ),
