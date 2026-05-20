@@ -80,7 +80,7 @@ Serving from localhost is recommended because microphone permissions work more r
 
 ## Demo Mode
 
-Click **Try Sample** to load a built-in analysis, or analyze your own song first. Then click **Demo Generate** to create a local generative visual app without calling Claude. This is useful for testing the generation flow, gallery saving, copy/download controls, and iframe rendering before API keys or proxies are configured.
+Click **Try Sample** to load a built-in analysis, or analyze your own song first. Then click **Generate Demo** to create a local generative visual app without calling Claude. This is useful for testing the generation flow, gallery saving, copy/download controls, and iframe rendering before API keys or proxies are configured.
 
 ## API Keys And Proxies
 

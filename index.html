@@ -14,19 +14,21 @@
     <style>
       :root {
         color-scheme: light;
-        --ink: #17191c;
-        --muted: #626a73;
-        --paper: #f6f7f2;
+        --ink: #15161a;
+        --muted: #66717f;
+        --paper: #f4f7fb;
         --panel: #ffffff;
-        --line: #d9ded8;
-        --line-strong: #bac4bc;
+        --panel-soft: #f8fafc;
+        --line: #dfe6ee;
+        --line-strong: #b8c4d2;
         --green: #0c9b72;
         --green-dark: #067253;
         --coral: #f05d3c;
         --yellow: #e7b91b;
         --blue: #3156d4;
         --pink: #be3f7b;
-        --shadow: 0 18px 50px rgba(23, 25, 28, 0.09);
+        --shadow: 0 22px 60px rgba(24, 35, 54, 0.11);
+        --shadow-soft: 0 10px 30px rgba(24, 35, 54, 0.08);
         --radius: 8px;
       }
 
@@ -37,11 +39,16 @@
       html,
       body {
         min-height: 100%;
+        overflow-x: hidden;
       }
 
       body {
         margin: 0;
-        background: var(--paper);
+        background:
+          linear-gradient(90deg, rgba(49, 86, 212, 0.055) 1px, transparent 1px),
+          linear-gradient(0deg, rgba(12, 155, 114, 0.045) 1px, transparent 1px),
+          linear-gradient(135deg, #f5f8fc 0%, #edf7f5 48%, #fff6f0 100%);
+        background-size: 34px 34px, 34px 34px, auto;
         color: var(--ink);
         font-family:
           Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
@@ -62,7 +69,8 @@
 
       button:disabled,
       input:disabled,
-      select:disabled {
+      select:disabled,
+      textarea:disabled {
         cursor: not-allowed;
         opacity: 0.55;
       }
@@ -75,8 +83,9 @@
 
       .topbar {
         border-bottom: 1px solid var(--line);
-        background: rgba(255, 255, 255, 0.84);
-        backdrop-filter: blur(12px);
+        background: rgba(255, 255, 255, 0.88);
+        backdrop-filter: blur(18px);
+        box-shadow: 0 1px 0 rgba(255, 255, 255, 0.82);
         position: sticky;
         top: 0;
         z-index: 20;
@@ -89,7 +98,7 @@
         align-items: center;
         justify-content: space-between;
         gap: 18px;
-        min-height: 68px;
+        min-height: 76px;
       }
 
       .brand {
@@ -100,8 +109,8 @@
       }
 
       .mark {
-        width: 38px;
-        height: 38px;
+        width: 44px;
+        height: 44px;
         border-radius: var(--radius);
         background:
           linear-gradient(135deg, var(--coral), transparent 58%),
@@ -114,6 +123,20 @@
         box-shadow: 0 8px 22px rgba(12, 155, 114, 0.24);
       }
 
+      .brand-copy {
+        display: grid;
+        gap: 2px;
+        min-width: 0;
+      }
+
+      .kicker {
+        color: var(--muted);
+        font-size: 0.76rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
       h1 {
         margin: 0;
         font-size: clamp(1.25rem, 2vw, 1.75rem);
@@ -122,16 +145,22 @@
       }
 
       .model-chip {
-        color: var(--muted);
-        font-size: 0.88rem;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.68);
+        color: var(--ink);
+        font-size: 0.82rem;
+        font-weight: 800;
+        padding: 8px 12px;
         white-space: nowrap;
+        box-shadow: var(--shadow-soft);
       }
 
       .shell {
         width: min(1420px, calc(100vw - 32px));
-        margin: 24px auto 36px;
+        margin: 22px auto 38px;
         display: grid;
-        grid-template-columns: minmax(360px, 470px) minmax(0, 1fr);
+        grid-template-columns: minmax(380px, 500px) minmax(0, 1fr);
         gap: 20px;
         flex: 1;
       }
@@ -145,10 +174,12 @@
       }
 
       .panel {
-        background: var(--panel);
+        background: rgba(255, 255, 255, 0.94);
         border: 1px solid var(--line);
         border-radius: var(--radius);
         box-shadow: var(--shadow);
+        overflow: hidden;
+        max-width: 100%;
       }
 
       .panel-header {
@@ -156,8 +187,9 @@
         align-items: center;
         justify-content: space-between;
         gap: 12px;
-        padding: 15px 16px;
+        padding: 16px 18px;
         border-bottom: 1px solid var(--line);
+        background: linear-gradient(180deg, #ffffff 0%, #f9fbfe 100%);
       }
 
       .panel-title {
@@ -168,23 +200,24 @@
       }
 
       .panel-body {
-        padding: 16px;
+        padding: 18px;
       }
 
       .actions {
         display: flex;
         flex-wrap: wrap;
         gap: 10px;
+        min-width: 0;
       }
 
       .button,
       .file-button {
-        min-height: 40px;
+        min-height: 42px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 8px;
-        padding: 0 14px;
+        padding: 0 15px;
         border-radius: var(--radius);
         border: 1px solid var(--line-strong);
         background: #ffffff;
@@ -193,6 +226,7 @@
         cursor: pointer;
         transition:
           transform 150ms ease,
+          box-shadow 150ms ease,
           border-color 150ms ease,
           background 150ms ease,
           color 150ms ease;
@@ -202,17 +236,41 @@
       .file-button:hover {
         transform: translateY(-1px);
         border-color: var(--ink);
+        box-shadow: var(--shadow-soft);
       }
 
-      .button.primary {
-        background: var(--green);
-        border-color: var(--green);
+      .button:disabled:hover,
+      .file-button:has(input:disabled):hover {
+        transform: none;
+        border-color: var(--line-strong);
+        box-shadow: none;
+      }
+
+      .button:focus-visible,
+      .file-button:focus-visible,
+      .segment:focus-visible {
+        outline: 3px solid rgba(49, 86, 212, 0.22);
+        outline-offset: 2px;
+      }
+
+      .button.primary,
+      .file-button.primary {
+        background: linear-gradient(135deg, var(--green), #087c8e);
+        border-color: rgba(12, 155, 114, 0.72);
         color: white;
+        box-shadow: 0 12px 28px rgba(12, 155, 114, 0.2);
       }
 
-      .button.primary:hover {
-        background: var(--green-dark);
+      .button.primary:hover,
+      .file-button.primary:hover {
+        background: linear-gradient(135deg, var(--green-dark), #075c72);
         border-color: var(--green-dark);
+      }
+
+      .button.secondary {
+        background: #15161a;
+        border-color: #15161a;
+        color: white;
       }
 
       .button.coral {
@@ -222,7 +280,7 @@
       }
 
       .button.ghost {
-        background: transparent;
+        background: rgba(255, 255, 255, 0.56);
       }
 
       .button.icon {
@@ -241,7 +299,7 @@
 
       .field-grid {
         display: grid;
-        gap: 12px;
+        gap: 14px;
       }
 
       .field-row {
@@ -271,7 +329,7 @@
         min-height: 40px;
         border: 1px solid var(--line-strong);
         border-radius: var(--radius);
-        padding: 9px 10px;
+        padding: 10px 11px;
         background: #ffffff;
         color: var(--ink);
         outline: none;
@@ -295,11 +353,94 @@
         line-height: 1.45;
       }
 
+      .header-chips {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 7px;
+      }
+
+      .mini-chip {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: #f5f7fb;
+        color: var(--muted);
+        font-size: 0.74rem;
+        font-weight: 850;
+        padding: 5px 8px;
+        white-space: nowrap;
+      }
+
+      .mini-chip.ready {
+        border-color: rgba(12, 155, 114, 0.28);
+        background: rgba(12, 155, 114, 0.09);
+        color: var(--green-dark);
+      }
+
+      .analysis-summary {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: stretch;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+
+      .mood-readout,
+      .tempo-readout {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background:
+          linear-gradient(135deg, rgba(49, 86, 212, 0.08), rgba(12, 155, 114, 0.06)),
+          #ffffff;
+        padding: 14px;
+        min-width: 0;
+      }
+
+      .summary-label {
+        display: block;
+        color: var(--muted);
+        font-size: 0.72rem;
+        font-weight: 850;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .mood-readout strong,
+      .tempo-readout strong {
+        display: block;
+        margin-top: 5px;
+        color: var(--ink);
+        font-size: clamp(1.45rem, 4vw, 2.2rem);
+        line-height: 1;
+        overflow-wrap: anywhere;
+      }
+
+      .summary-sub {
+        display: block;
+        margin-top: 7px;
+        color: var(--muted);
+        font-size: 0.86rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .tempo-readout {
+        min-width: 112px;
+        text-align: center;
+      }
+
+      .tempo-readout small {
+        color: var(--muted);
+        font-weight: 850;
+      }
+
       .wave-wrap {
         border: 1px solid var(--line);
         border-radius: var(--radius);
         overflow: hidden;
         background: #121417;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
       }
 
       canvas.waveform {
@@ -323,8 +464,9 @@
       .metric {
         border: 1px solid var(--line);
         border-radius: var(--radius);
-        padding: 10px;
+        padding: 11px;
         min-width: 0;
+        background: linear-gradient(180deg, #ffffff, #f8fafc);
       }
 
       .metric-label {
@@ -338,10 +480,42 @@
       .metric-value {
         margin-top: 4px;
         font-weight: 850;
-        font-size: 1rem;
+        font-size: 1.04rem;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+      }
+
+      .frequency-bars {
+        display: grid;
+        gap: 8px;
+        margin-top: 14px;
+      }
+
+      .frequency-row {
+        display: grid;
+        grid-template-columns: 58px minmax(0, 1fr) 42px;
+        align-items: center;
+        gap: 10px;
+        color: var(--muted);
+        font-size: 0.78rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .frequency-track {
+        height: 8px;
+        border-radius: 999px;
+        background: #e8edf4;
+        overflow: hidden;
+      }
+
+      .frequency-fill {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--green), var(--blue));
       }
 
       .palette {
@@ -352,10 +526,12 @@
       }
 
       .swatch {
-        width: 38px;
-        height: 28px;
+        flex: 1 1 42px;
+        min-width: 42px;
+        height: 30px;
         border-radius: 6px;
         border: 1px solid rgba(0, 0, 0, 0.2);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
       }
 
       .chips {
@@ -370,7 +546,7 @@
         min-height: 30px;
         padding: 5px 10px;
         color: var(--ink);
-        background: #fbfcf9;
+        background: #f8fafc;
         font-size: 0.86rem;
         font-weight: 700;
       }
@@ -384,12 +560,13 @@
       }
 
       .segment {
-        min-height: 38px;
+        min-height: 40px;
         background: white;
         color: var(--ink);
         border-right: 1px solid var(--line);
         cursor: pointer;
         font-weight: 760;
+        padding: 0 9px;
       }
 
       .segment:last-child {
@@ -397,7 +574,7 @@
       }
 
       .segment.active {
-        background: var(--ink);
+        background: linear-gradient(135deg, var(--ink), #263042);
         color: white;
       }
 
@@ -408,6 +585,11 @@
         gap: 10px;
         color: var(--muted);
         font-size: 0.92rem;
+        margin: 12px 0;
+        padding: 8px 10px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: #f8fafc;
       }
 
       .spinner {
@@ -427,6 +609,7 @@
 
       details {
         border-top: 1px solid var(--line);
+        background: #fbfcfe;
       }
 
       summary {
@@ -449,7 +632,7 @@
 
       .json-view,
       .stream-view {
-        background: #14171c;
+        background: #12151b;
         color: #eff5eb;
         border-radius: var(--radius);
         padding: 12px;
@@ -462,7 +645,7 @@
       }
 
       .preview-shell {
-        min-height: 620px;
+        min-height: 660px;
         display: grid;
         grid-template-rows: auto 1fr;
       }
@@ -478,7 +661,7 @@
 
       .preview-frame-wrap {
         position: relative;
-        min-height: 560px;
+        min-height: 600px;
         background:
           linear-gradient(90deg, rgba(23, 25, 28, 0.06) 1px, transparent 1px),
           linear-gradient(0deg, rgba(23, 25, 28, 0.06) 1px, transparent 1px),
@@ -489,7 +672,7 @@
       iframe {
         width: 100%;
         height: 100%;
-        min-height: 560px;
+        min-height: 600px;
         border: 0;
         display: block;
         background: white;
@@ -501,24 +684,68 @@
         display: grid;
         place-items: center;
         padding: 32px;
-        color: var(--muted);
+        color: var(--ink);
         text-align: center;
-        font-weight: 750;
+      }
+
+      .empty-preview-card {
+        display: grid;
+        justify-items: center;
+        gap: 18px;
+        width: min(430px, 100%);
+      }
+
+      .empty-visual {
+        width: min(320px, 82vw);
+        height: 160px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background:
+          linear-gradient(180deg, rgba(21, 22, 26, 0.92), rgba(21, 22, 26, 0.98)),
+          #15161a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 20px;
+        box-shadow: var(--shadow-soft);
+      }
+
+      .empty-bar {
+        width: 8px;
+        height: var(--bar-height);
+        border-radius: 999px;
+        background: linear-gradient(180deg, var(--yellow), var(--coral), var(--blue));
+      }
+
+      .empty-preview-card strong {
+        font-size: 1.35rem;
+      }
+
+      .empty-preview-card p {
+        margin: -8px 0 0;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      .empty-preview-card .actions {
+        justify-content: center;
       }
 
       .gallery-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-        gap: 10px;
+        grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+        gap: 12px;
       }
 
       .gallery-item {
         border: 1px solid var(--line);
         border-radius: var(--radius);
-        padding: 10px;
-        background: #fbfcf9;
+        padding: 12px;
+        background: linear-gradient(180deg, #ffffff, #f8fafc);
         display: grid;
         gap: 8px;
+        box-shadow: var(--shadow-soft);
       }
 
       .gallery-actions {
@@ -569,14 +796,14 @@
         .preview-shell,
         .preview-frame-wrap,
         iframe {
-          min-height: 520px;
+          min-height: 540px;
         }
       }
 
       @media (max-width: 680px) {
         .topbar-inner,
         .shell {
-          width: min(100vw - 20px, 1420px);
+          width: calc(100vw - 20px);
         }
 
         .topbar-inner {
@@ -584,16 +811,42 @@
           align-items: flex-start;
           flex-direction: column;
           justify-content: center;
-          gap: 4px;
+          gap: 8px;
+          padding: 10px 0;
+        }
+
+        .model-chip {
+          white-space: normal;
+        }
+
+        .panel-header {
+          align-items: flex-start;
+          flex-direction: column;
         }
 
         .field-row,
-        .metrics {
+        .metrics,
+        .analysis-summary {
           grid-template-columns: 1fr;
+        }
+
+        .tempo-readout {
+          min-width: 0;
+          text-align: left;
         }
 
         .segmented {
           grid-template-columns: 1fr 1fr;
+        }
+
+        .frequency-row {
+          grid-template-columns: 50px minmax(0, 1fr) 38px;
+          gap: 8px;
+        }
+
+        .empty-visual {
+          height: 128px;
+          padding: 16px;
         }
 
         .preview-toolbar {
@@ -607,7 +860,10 @@
 
         .button,
         .file-button {
-          flex: 1 1 auto;
+          flex: 1 1 100%;
+          min-width: 0;
+          width: 100%;
+          white-space: normal;
         }
       }
     </style>
@@ -1419,6 +1675,35 @@ draw(0);
         );
       }
 
+      function FrequencyBars({ profile }) {
+        const rows = [
+          ["Bass", profile?.bass || 0],
+          ["Mid", profile?.mid || 0],
+          ["Treble", profile?.treble || 0],
+        ];
+
+        return h(
+          "div",
+          { className: "frequency-bars", "aria-label": "Frequency balance" },
+          rows.map(([label, value]) =>
+            h(
+              "div",
+              { className: "frequency-row", key: label },
+              h("span", null, label),
+              h(
+                "span",
+                { className: "frequency-track" },
+                h("span", {
+                  className: "frequency-fill",
+                  style: { width: `${Math.round(clamp(value, 0, 1) * 100)}%` },
+                }),
+              ),
+              h("span", null, `${Math.round(clamp(value, 0, 1) * 100)}%`),
+            ),
+          ),
+        );
+      }
+
       function WaveformCanvas({ waveform, isRecording, analyserRef, audioRef, palette }) {
         const canvasRef = useRef(null);
 
@@ -1578,6 +1863,9 @@ draw(0);
         }, [audioUrl]);
 
         const hasAnalysis = analysis.mood !== "unknown";
+        const hasClaudeAccess = Boolean(anthropicKey.trim() || anthropicProxy.trim());
+        const hasWhisperAccess = Boolean(openaiKey.trim() || openaiProxy.trim());
+        const bpmLabel = Number.isFinite(analysis.bpm) ? analysis.bpm : "--";
         const activeThemes = useMemo(
           () => (analysis.themes.length ? analysis.themes : instrumentalThemes(analysis)),
           [analysis],
@@ -1915,9 +2203,14 @@ draw(0);
                 "div",
                 { className: "brand" },
                 h("div", { className: "mark", "aria-hidden": "true" }, "S"),
-                h("h1", null, "Song to App"),
+                h(
+                  "div",
+                  { className: "brand-copy" },
+                  h("span", { className: "kicker" }, "Audio to interface"),
+                  h("h1", null, "Song to App"),
+                ),
               ),
-              h("div", { className: "model-chip" }, CLAUDE_MODEL),
+              h("div", { className: "model-chip" }, hasClaudeAccess ? "Claude ready" : "Demo ready"),
             ),
           ),
           h(
@@ -1940,10 +2233,28 @@ draw(0);
                   { className: "panel-body" },
                   h(
                     "div",
+                    { className: "analysis-summary" },
+                    h(
+                      "div",
+                      { className: "mood-readout" },
+                      h("span", { className: "summary-label" }, "Mood"),
+                      h("strong", null, analysis.mood),
+                      h("span", { className: "summary-sub", title: analysis.sourceName || status }, analysis.sourceName || status),
+                    ),
+                    h(
+                      "div",
+                      { className: "tempo-readout" },
+                      h("span", { className: "summary-label" }, "Tempo"),
+                      h("strong", null, bpmLabel),
+                      h("small", null, "BPM"),
+                    ),
+                  ),
+                  h(
+                    "div",
                     { className: "actions" },
                     h(
                       "label",
-                      { className: "file-button" },
+                      { className: "file-button primary" },
                       "Upload Song",
                       h("input", {
                         className: "hidden-input",
@@ -1967,7 +2278,7 @@ draw(0);
                       {
                         className: isRecording ? "coral" : "",
                         onClick: isRecording ? stopRecording : startRecording,
-                        disabled: isAnalyzing,
+                        disabled: isAnalyzing || isGenerating,
                       },
                       isRecording ? "Stop Recording" : "Record from Mic",
                     ),
@@ -1976,7 +2287,8 @@ draw(0);
                       {
                         className: "ghost",
                         onClick: transcribeCurrentAudio,
-                        disabled: !audioBlob || isTranscribing || (!openaiKey && !openaiProxy),
+                        disabled: !audioBlob || isTranscribing || !hasWhisperAccess,
+                        title: hasWhisperAccess ? "" : "Add an OpenAI key or Whisper proxy first.",
                       },
                       isTranscribing ? "Transcribing" : "Transcribe Vocals",
                     ),
@@ -2023,6 +2335,7 @@ draw(0);
                     h(Metric, { label: "Genre", value: analysis.genre }),
                     h(Metric, { label: "Length", value: formatDuration(analysis.duration) }),
                   ),
+                  h(FrequencyBars, { profile: analysis.frequencyProfile }),
                   h(
                     "div",
                     { className: "palette", "aria-label": "Color palette" },
@@ -2130,9 +2443,10 @@ draw(0);
                     h(
                       Button,
                       {
-                        className: "primary",
+                        className: hasClaudeAccess ? "primary" : "",
                         onClick: () => generateApp(false),
-                        disabled: !hasAnalysis || isGenerating,
+                        disabled: !hasAnalysis || isGenerating || !hasClaudeAccess,
+                        title: hasClaudeAccess ? "" : "Add an Anthropic key or Claude proxy first.",
                       },
                       isGenerating ? "Generating" : "Generate with Claude",
                     ),
@@ -2140,18 +2454,19 @@ draw(0);
                       Button,
                       {
                         onClick: () => generateApp(true),
-                        disabled: !hasAnalysis || isGenerating,
+                        disabled: !hasAnalysis || isGenerating || !hasClaudeAccess,
+                        title: hasClaudeAccess ? "" : "Add an Anthropic key or Claude proxy first.",
                       },
                       "Regenerate",
                     ),
                     h(
                       Button,
                       {
-                        className: "ghost",
+                        className: hasClaudeAccess ? "ghost" : "primary",
                         onClick: generateDemoApp,
                         disabled: !hasAnalysis || isGenerating,
                       },
-                      "Demo Generate",
+                      "Generate Demo",
                     ),
                   ),
                 ),
@@ -2183,7 +2498,12 @@ draw(0);
                   "div",
                   { className: "panel-header" },
                   h("h2", { className: "panel-title" }, "API Settings"),
-                  h("div", { className: "hint" }, "Session only"),
+                  h(
+                    "div",
+                    { className: "header-chips" },
+                    h("span", { className: classNames("mini-chip", hasClaudeAccess && "ready") }, hasClaudeAccess ? "Claude ready" : "Claude off"),
+                    h("span", { className: classNames("mini-chip", hasWhisperAccess && "ready") }, hasWhisperAccess ? "Whisper ready" : "Whisper off"),
+                  ),
                 ),
                 h(
                   "div",
@@ -2261,7 +2581,8 @@ draw(0);
                       Button,
                       {
                         onClick: () => generateApp(true),
-                        disabled: !hasAnalysis || isGenerating,
+                        disabled: !hasAnalysis || isGenerating || !hasClaudeAccess,
+                        title: hasClaudeAccess ? "" : "Add an Anthropic key or Claude proxy first.",
                       },
                       "Regenerate",
                     ),
@@ -2295,7 +2616,57 @@ draw(0);
                     : h(
                         "div",
                         { className: "empty-preview" },
-                        "Analyze a song, then generate with Claude or try the local demo generator.",
+                        h(
+                          "div",
+                          { className: "empty-preview-card" },
+                          h(
+                            "div",
+                            { className: "empty-visual", "aria-hidden": "true" },
+                            [42, 72, 36, 104, 62, 126, 54, 92, 44, 118, 70, 48, 96, 58, 82, 40].map(
+                              (height, index) =>
+                                h("span", {
+                                  className: "empty-bar",
+                                  key: index,
+                                  style: { "--bar-height": `${height}px` },
+                                }),
+                            ),
+                          ),
+                          h("strong", null, hasAnalysis ? "Ready to generate" : "Waiting for a song"),
+                          h(
+                            "p",
+                            null,
+                            hasAnalysis
+                              ? `${analysis.mood} / ${analysis.energy} / ${Number.isFinite(analysis.bpm) ? `${analysis.bpm} BPM` : "tempo mapped"}`
+                              : "No waveform analyzed yet.",
+                          ),
+                          h(
+                            "div",
+                            { className: "actions" },
+                            !hasAnalysis &&
+                              h(
+                                Button,
+                                { className: "primary", onClick: loadSampleAnalysis },
+                                "Try Sample",
+                              ),
+                            hasAnalysis &&
+                              h(
+                                Button,
+                                { className: hasClaudeAccess ? "ghost" : "primary", onClick: generateDemoApp, disabled: isGenerating },
+                                "Generate Demo",
+                              ),
+                            hasAnalysis &&
+                              h(
+                                Button,
+                                {
+                                  className: hasClaudeAccess ? "primary" : "",
+                                  onClick: () => generateApp(false),
+                                  disabled: isGenerating || !hasClaudeAccess,
+                                  title: hasClaudeAccess ? "" : "Add an Anthropic key or Claude proxy first.",
+                                },
+                                "Generate with Claude",
+                              ),
+                          ),
+                        ),
                       ),
                 ),
               ),
