@@ -13,7 +13,7 @@
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <style>
       :root {
-        color-scheme: light;
+        color-scheme: light dark;
         --ink: #15161a;
         --muted: #66717f;
         --paper: #f4f7fb;
@@ -30,14 +30,28 @@
         --shadow: 0 22px 60px rgba(24, 35, 54, 0.11);
         --shadow-soft: 0 10px 30px rgba(24, 35, 54, 0.08);
         --radius: 8px;
+        --drop-border: rgba(49, 86, 212, 0.5);
+        --drop-bg: rgba(49, 86, 212, 0.06);
       }
 
-      * {
-        box-sizing: border-box;
+      [data-theme="dark"] {
+        color-scheme: dark;
+        --ink: #e8edf4;
+        --muted: #8a97a8;
+        --paper: #0f1116;
+        --panel: #181b22;
+        --panel-soft: #1c2029;
+        --line: #272d38;
+        --line-strong: #384050;
+        --shadow: 0 22px 60px rgba(0, 0, 0, 0.45);
+        --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.32);
+        --drop-border: rgba(49, 86, 212, 0.6);
+        --drop-bg: rgba(49, 86, 212, 0.12);
       }
 
-      html,
-      body {
+      * { box-sizing: border-box; }
+
+      html, body {
         min-height: 100%;
         overflow-x: hidden;
       }
@@ -50,27 +64,22 @@
           linear-gradient(135deg, #f5f8fc 0%, #edf7f5 48%, #fff6f0 100%);
         background-size: 34px 34px, 34px 34px, auto;
         color: var(--ink);
-        font-family:
-          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-          sans-serif;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         letter-spacing: 0;
+        transition: background 0.3s ease, color 0.2s ease;
       }
 
-      button,
-      input,
-      select,
-      textarea {
-        font: inherit;
+      [data-theme="dark"] body {
+        background:
+          linear-gradient(90deg, rgba(49, 86, 212, 0.04) 1px, transparent 1px),
+          linear-gradient(0deg, rgba(12, 155, 114, 0.03) 1px, transparent 1px),
+          linear-gradient(135deg, #0b0d11 0%, #0d1118 48%, #0f0e12 100%);
+        background-size: 34px 34px, 34px 34px, auto;
       }
 
-      button {
-        border: 0;
-      }
-
-      button:disabled,
-      input:disabled,
-      select:disabled,
-      textarea:disabled {
+      button, input, select, textarea { font: inherit; }
+      button { border: 0; }
+      button:disabled, input:disabled, select:disabled, textarea:disabled {
         cursor: not-allowed;
         opacity: 0.55;
       }
@@ -89,6 +98,12 @@
         position: sticky;
         top: 0;
         z-index: 20;
+        transition: background 0.3s ease, border-color 0.2s ease;
+      }
+
+      [data-theme="dark"] .topbar {
+        background: rgba(24, 27, 34, 0.9);
+        box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04);
       }
 
       .topbar-inner {
@@ -121,6 +136,7 @@
         color: white;
         font-weight: 900;
         box-shadow: 0 8px 22px rgba(12, 155, 114, 0.24);
+        flex-shrink: 0;
       }
 
       .brand-copy {
@@ -144,6 +160,13 @@
         letter-spacing: 0;
       }
 
+      .topbar-controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-shrink: 0;
+      }
+
       .model-chip {
         border: 1px solid var(--line);
         border-radius: 999px;
@@ -156,6 +179,30 @@
         box-shadow: var(--shadow-soft);
       }
 
+      [data-theme="dark"] .model-chip {
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      .theme-toggle {
+        width: 40px;
+        height: 40px;
+        border-radius: var(--radius);
+        border: 1px solid var(--line);
+        background: var(--panel);
+        color: var(--ink);
+        cursor: pointer;
+        display: grid;
+        place-items: center;
+        font-size: 1.1rem;
+        transition: border-color 0.15s, background 0.15s, transform 0.15s;
+        flex-shrink: 0;
+      }
+
+      .theme-toggle:hover {
+        border-color: var(--ink);
+        transform: translateY(-1px);
+      }
+
       .shell {
         width: min(1420px, calc(100vw - 32px));
         margin: 22px auto 38px;
@@ -165,8 +212,7 @@
         flex: 1;
       }
 
-      .left-stack,
-      .right-stack {
+      .left-stack, .right-stack {
         display: flex;
         flex-direction: column;
         gap: 16px;
@@ -174,13 +220,41 @@
       }
 
       .panel {
-        background: rgba(255, 255, 255, 0.94);
+        background: var(--panel);
         border: 1px solid var(--line);
         border-radius: var(--radius);
         box-shadow: var(--shadow);
         overflow: hidden;
         max-width: 100%;
+        transition: background 0.2s ease, border-color 0.2s ease;
       }
+
+      /* Drag-and-drop overlay on the audio input panel */
+      .panel.drag-over {
+        border-color: var(--drop-border);
+        background: var(--drop-bg);
+        box-shadow: 0 0 0 3px rgba(49, 86, 212, 0.18), var(--shadow);
+      }
+
+      .drop-hint {
+        display: none;
+        position: absolute;
+        inset: 0;
+        z-index: 10;
+        background: var(--drop-bg);
+        border: 2px dashed var(--drop-border);
+        border-radius: var(--radius);
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 1.1rem;
+        color: var(--blue);
+        pointer-events: none;
+        gap: 10px;
+      }
+
+      .panel.drag-over .drop-hint { display: flex; }
+      .panel-drop-wrap { position: relative; }
 
       .panel-header {
         display: flex;
@@ -189,7 +263,7 @@
         gap: 12px;
         padding: 16px 18px;
         border-bottom: 1px solid var(--line);
-        background: linear-gradient(180deg, #ffffff 0%, #f9fbfe 100%);
+        background: linear-gradient(180deg, var(--panel) 0%, var(--panel-soft) 100%);
       }
 
       .panel-title {
@@ -199,9 +273,7 @@
         letter-spacing: 0;
       }
 
-      .panel-body {
-        padding: 18px;
-      }
+      .panel-body { padding: 18px; }
 
       .actions {
         display: flex;
@@ -210,8 +282,7 @@
         min-width: 0;
       }
 
-      .button,
-      .file-button {
+      .button, .file-button {
         min-height: 42px;
         display: inline-flex;
         align-items: center;
@@ -220,74 +291,54 @@
         padding: 0 15px;
         border-radius: var(--radius);
         border: 1px solid var(--line-strong);
-        background: #ffffff;
+        background: var(--panel);
         color: var(--ink);
         font-weight: 750;
         cursor: pointer;
-        transition:
-          transform 150ms ease,
-          box-shadow 150ms ease,
-          border-color 150ms ease,
-          background 150ms ease,
-          color 150ms ease;
+        transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease, background 150ms ease, color 150ms ease;
       }
 
-      .button:hover,
-      .file-button:hover {
+      .button:hover, .file-button:hover {
         transform: translateY(-1px);
         border-color: var(--ink);
         box-shadow: var(--shadow-soft);
       }
 
-      .button:disabled:hover,
-      .file-button:has(input:disabled):hover {
+      .button:disabled:hover, .file-button:has(input:disabled):hover {
         transform: none;
         border-color: var(--line-strong);
         box-shadow: none;
       }
 
-      .button:focus-visible,
-      .file-button:focus-visible,
-      .segment:focus-visible {
-        outline: 3px solid rgba(49, 86, 212, 0.22);
+      .button:focus-visible, .file-button:focus-visible, .segment:focus-visible {
+        outline: 3px solid rgba(49, 86, 212, 0.32);
         outline-offset: 2px;
       }
 
-      .button.primary,
-      .file-button.primary {
+      .button.primary, .file-button.primary {
         background: linear-gradient(135deg, var(--green), #087c8e);
         border-color: rgba(12, 155, 114, 0.72);
         color: white;
         box-shadow: 0 12px 28px rgba(12, 155, 114, 0.2);
       }
 
-      .button.primary:hover,
-      .file-button.primary:hover {
+      .button.primary:hover, .file-button.primary:hover {
         background: linear-gradient(135deg, var(--green-dark), #075c72);
         border-color: var(--green-dark);
       }
 
-      .button.secondary {
-        background: #15161a;
-        border-color: #15161a;
-        color: white;
-      }
-
-      .button.coral {
-        background: var(--coral);
-        border-color: var(--coral);
-        color: white;
-      }
+      .button.secondary { background: #15161a; border-color: #15161a; color: white; }
+      .button.coral { background: var(--coral); border-color: var(--coral); color: white; }
 
       .button.ghost {
         background: rgba(255, 255, 255, 0.56);
       }
 
-      .button.icon {
-        width: 40px;
-        padding: 0;
-        flex: 0 0 auto;
+      [data-theme="dark"] .button.ghost {
+        background: rgba(255, 255, 255, 0.07);
       }
+
+      .button.icon { width: 40px; padding: 0; flex: 0 0 auto; }
 
       .hidden-input {
         position: absolute;
@@ -297,10 +348,7 @@
         pointer-events: none;
       }
 
-      .field-grid {
-        display: grid;
-        gap: 14px;
-      }
+      .field-grid { display: grid; gap: 14px; }
 
       .field-row {
         display: grid;
@@ -308,11 +356,7 @@
         gap: 12px;
       }
 
-      .field {
-        display: grid;
-        gap: 6px;
-        min-width: 0;
-      }
+      .field { display: grid; gap: 6px; min-width: 0; }
 
       .field span {
         font-size: 0.78rem;
@@ -322,48 +366,33 @@
         letter-spacing: 0.06em;
       }
 
-      .field input,
-      .field select,
-      .field textarea {
+      .field input, .field select, .field textarea {
         width: 100%;
         min-height: 40px;
         border: 1px solid var(--line-strong);
         border-radius: var(--radius);
         padding: 10px 11px;
-        background: #ffffff;
+        background: var(--panel);
         color: var(--ink);
         outline: none;
+        transition: border-color 0.15s, box-shadow 0.15s, background 0.2s;
       }
 
-      .field textarea {
-        min-height: 90px;
-        resize: vertical;
-      }
+      .field textarea { min-height: 90px; resize: vertical; }
 
-      .field input:focus,
-      .field select:focus,
-      .field textarea:focus {
+      .field input:focus, .field select:focus, .field textarea:focus {
         border-color: var(--blue);
         box-shadow: 0 0 0 3px rgba(49, 86, 212, 0.14);
       }
 
-      .hint {
-        color: var(--muted);
-        font-size: 0.86rem;
-        line-height: 1.45;
-      }
+      .hint { color: var(--muted); font-size: 0.86rem; line-height: 1.45; }
 
-      .header-chips {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: flex-end;
-        gap: 7px;
-      }
+      .header-chips { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 7px; }
 
       .mini-chip {
         border: 1px solid var(--line);
         border-radius: 999px;
-        background: #f5f7fb;
+        background: var(--panel-soft);
         color: var(--muted);
         font-size: 0.74rem;
         font-weight: 850;
@@ -385,15 +414,13 @@
         margin-bottom: 14px;
       }
 
-      .mood-readout,
-      .tempo-readout {
+      .mood-readout, .tempo-readout {
         border: 1px solid var(--line);
         border-radius: var(--radius);
-        background:
-          linear-gradient(135deg, rgba(49, 86, 212, 0.08), rgba(12, 155, 114, 0.06)),
-          #ffffff;
+        background: linear-gradient(135deg, rgba(49, 86, 212, 0.08), rgba(12, 155, 114, 0.06)), var(--panel);
         padding: 14px;
         min-width: 0;
+        transition: background 0.2s;
       }
 
       .summary-label {
@@ -405,8 +432,7 @@
         text-transform: uppercase;
       }
 
-      .mood-readout strong,
-      .tempo-readout strong {
+      .mood-readout strong, .tempo-readout strong {
         display: block;
         margin-top: 5px;
         color: var(--ink);
@@ -425,15 +451,8 @@
         white-space: nowrap;
       }
 
-      .tempo-readout {
-        min-width: 112px;
-        text-align: center;
-      }
-
-      .tempo-readout small {
-        color: var(--muted);
-        font-weight: 850;
-      }
+      .tempo-readout { min-width: 112px; text-align: center; }
+      .tempo-readout small { color: var(--muted); font-weight: 850; }
 
       .wave-wrap {
         border: 1px solid var(--line);
@@ -443,16 +462,8 @@
         box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
       }
 
-      canvas.waveform {
-        width: 100%;
-        height: 152px;
-        display: block;
-      }
-
-      audio {
-        width: 100%;
-        margin-top: 12px;
-      }
+      canvas.waveform { width: 100%; height: 152px; display: block; }
+      audio { width: 100%; margin-top: 12px; }
 
       .metrics {
         display: grid;
@@ -466,7 +477,8 @@
         border-radius: var(--radius);
         padding: 11px;
         min-width: 0;
-        background: linear-gradient(180deg, #ffffff, #f8fafc);
+        background: linear-gradient(180deg, var(--panel), var(--panel-soft));
+        transition: background 0.2s;
       }
 
       .metric-label {
@@ -486,11 +498,7 @@
         text-overflow: ellipsis;
       }
 
-      .frequency-bars {
-        display: grid;
-        gap: 8px;
-        margin-top: 14px;
-      }
+      .frequency-bars { display: grid; gap: 8px; margin-top: 14px; }
 
       .frequency-row {
         display: grid;
@@ -507,7 +515,7 @@
       .frequency-track {
         height: 8px;
         border-radius: 999px;
-        background: #e8edf4;
+        background: var(--line);
         overflow: hidden;
       }
 
@@ -516,14 +524,10 @@
         height: 100%;
         border-radius: inherit;
         background: linear-gradient(90deg, var(--green), var(--blue));
+        transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
-      .palette {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-        margin-top: 12px;
-      }
+      .palette { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
 
       .swatch {
         flex: 1 1 42px;
@@ -532,13 +536,21 @@
         border-radius: 6px;
         border: 1px solid rgba(0, 0, 0, 0.2);
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+        transition: transform 0.15s;
+        cursor: default;
       }
 
-      .chips {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
+      .swatch:hover { transform: scaleY(1.15); }
+
+      .palette-name {
+        width: 100%;
+        font-size: 0.75rem;
+        color: var(--muted);
+        font-weight: 700;
+        margin-top: 6px;
       }
+
+      .chips { display: flex; gap: 8px; flex-wrap: wrap; }
 
       .chip {
         border: 1px solid var(--line);
@@ -546,7 +558,7 @@
         min-height: 30px;
         padding: 5px 10px;
         color: var(--ink);
-        background: #f8fafc;
+        background: var(--panel-soft);
         font-size: 0.86rem;
         font-weight: 700;
       }
@@ -561,21 +573,25 @@
 
       .segment {
         min-height: 40px;
-        background: white;
+        background: var(--panel);
         color: var(--ink);
         border-right: 1px solid var(--line);
         cursor: pointer;
         font-weight: 760;
         padding: 0 9px;
+        transition: background 0.12s, color 0.12s;
       }
 
-      .segment:last-child {
-        border-right: 0;
-      }
+      .segment:last-child { border-right: 0; }
 
       .segment.active {
         background: linear-gradient(135deg, var(--ink), #263042);
         color: white;
+      }
+
+      [data-theme="dark"] .segment.active {
+        background: linear-gradient(135deg, #3a4259, #2a3048);
+        color: #e8edf4;
       }
 
       .status {
@@ -589,7 +605,7 @@
         padding: 8px 10px;
         border: 1px solid var(--line);
         border-radius: var(--radius);
-        background: #f8fafc;
+        background: var(--panel-soft);
       }
 
       .spinner {
@@ -599,17 +615,14 @@
         border-top-color: var(--green);
         border-radius: 50%;
         animation: spin 800ms linear infinite;
+        flex-shrink: 0;
       }
 
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
+      @keyframes spin { to { transform: rotate(360deg); } }
 
       details {
         border-top: 1px solid var(--line);
-        background: #fbfcfe;
+        background: var(--panel-soft);
       }
 
       summary {
@@ -620,18 +633,16 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        color: var(--ink);
+        transition: background 0.12s;
       }
 
-      summary::-webkit-details-marker {
-        display: none;
-      }
+      summary:hover { background: var(--line); }
+      summary::-webkit-details-marker { display: none; }
 
-      .details-body {
-        padding: 0 16px 16px;
-      }
+      .details-body { padding: 0 16px 16px; }
 
-      .json-view,
-      .stream-view {
+      .json-view, .stream-view {
         background: #12151b;
         color: #eff5eb;
         border-radius: var(--radius);
@@ -643,6 +654,22 @@
         max-height: 260px;
         white-space: pre-wrap;
       }
+
+      .error-box {
+        background: rgba(240, 93, 60, 0.08);
+        border: 1px solid rgba(240, 93, 60, 0.28);
+        border-radius: var(--radius);
+        padding: 10px 12px;
+        color: var(--coral);
+        font-size: 0.88rem;
+        font-weight: 700;
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        margin-top: 4px;
+      }
+
+      .error-box-icon { flex-shrink: 0; margin-top: 1px; }
 
       .preview-shell {
         min-height: 660px;
@@ -657,6 +684,14 @@
         gap: 12px;
         padding: 12px;
         border-bottom: 1px solid var(--line);
+        flex-wrap: wrap;
+      }
+
+      .preview-toolbar-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
       }
 
       .preview-frame-wrap {
@@ -666,6 +701,14 @@
           linear-gradient(90deg, rgba(23, 25, 28, 0.06) 1px, transparent 1px),
           linear-gradient(0deg, rgba(23, 25, 28, 0.06) 1px, transparent 1px),
           #fdfefb;
+        background-size: 22px 22px;
+      }
+
+      [data-theme="dark"] .preview-frame-wrap {
+        background:
+          linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+          linear-gradient(0deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+          #0a0c10;
         background-size: 22px 22px;
       }
 
@@ -700,9 +743,7 @@
         height: 160px;
         border: 1px solid var(--line);
         border-radius: var(--radius);
-        background:
-          linear-gradient(180deg, rgba(21, 22, 26, 0.92), rgba(21, 22, 26, 0.98)),
-          #15161a;
+        background: linear-gradient(180deg, rgba(21, 22, 26, 0.92), rgba(21, 22, 26, 0.98)), #15161a;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -718,9 +759,7 @@
         background: linear-gradient(180deg, var(--yellow), var(--coral), var(--blue));
       }
 
-      .empty-preview-card strong {
-        font-size: 1.35rem;
-      }
+      .empty-preview-card strong { font-size: 1.35rem; }
 
       .empty-preview-card p {
         margin: -8px 0 0;
@@ -728,10 +767,9 @@
         line-height: 1.5;
       }
 
-      .empty-preview-card .actions {
-        justify-content: center;
-      }
+      .empty-preview-card .actions { justify-content: center; }
 
+      /* Gallery */
       .gallery-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
@@ -742,70 +780,118 @@
         border: 1px solid var(--line);
         border-radius: var(--radius);
         padding: 12px;
-        background: linear-gradient(180deg, #ffffff, #f8fafc);
+        background: linear-gradient(180deg, var(--panel), var(--panel-soft));
         display: grid;
         gap: 8px;
         box-shadow: var(--shadow-soft);
+        transition: transform 0.15s, box-shadow 0.15s;
+        position: relative;
+        overflow: hidden;
       }
 
-      .gallery-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
+      .gallery-item:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow);
       }
 
-      .gallery-actions .button {
-        min-height: 34px;
-        padding: 0 10px;
+      .gallery-mood-bar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
       }
+
+      .gallery-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+      .gallery-actions .button { min-height: 34px; padding: 0 10px; }
 
       .gallery-name {
         font-weight: 820;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        padding-top: 4px;
       }
 
-      .gallery-meta {
-        color: var(--muted);
-        font-size: 0.82rem;
-      }
-
-      .danger-text {
-        color: #8e2f1f;
-      }
+      .gallery-meta { color: var(--muted); font-size: 0.82rem; }
+      .danger-text { color: #8e2f1f; }
 
       .toast {
         position: fixed;
         right: 18px;
         bottom: 18px;
         background: var(--ink);
-        color: white;
+        color: var(--panel);
         border-radius: var(--radius);
-        padding: 10px 12px;
+        padding: 10px 14px;
         box-shadow: var(--shadow);
         z-index: 50;
         font-weight: 750;
+        font-size: 0.92rem;
+        animation: toast-in 0.2s ease;
+      }
+
+      @keyframes toast-in {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      /* Keyboard shortcut badge */
+      .kbd {
+        display: inline-block;
+        border: 1px solid var(--line-strong);
+        border-radius: 4px;
+        padding: 1px 5px;
+        font-size: 0.72rem;
+        font-weight: 800;
+        font-family: monospace;
+        color: var(--muted);
+        background: var(--panel-soft);
+        vertical-align: middle;
+        margin-left: 4px;
+      }
+
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      /* Palette row in generation panel */
+      .gen-palette {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .gen-palette-swatch {
+        width: 24px;
+        height: 24px;
+        border-radius: 4px;
+        border: 1px solid rgba(0,0,0,0.18);
+        flex-shrink: 0;
+      }
+
+      .gen-palette-label {
+        font-size: 0.78rem;
+        color: var(--muted);
+        font-weight: 700;
       }
 
       @media (max-width: 1080px) {
-        .shell {
-          grid-template-columns: 1fr;
-        }
-
-        .preview-shell,
-        .preview-frame-wrap,
-        iframe {
-          min-height: 540px;
-        }
+        .shell { grid-template-columns: 1fr; }
+        .preview-shell, .preview-frame-wrap, iframe { min-height: 540px; }
       }
 
       @media (max-width: 680px) {
-        .topbar-inner,
-        .shell {
-          width: calc(100vw - 20px);
-        }
-
+        .topbar-inner, .shell { width: calc(100vw - 20px); }
         .topbar-inner {
           min-height: 76px;
           align-items: flex-start;
@@ -814,57 +900,25 @@
           gap: 8px;
           padding: 10px 0;
         }
-
-        .model-chip {
-          white-space: normal;
-        }
-
-        .panel-header {
-          align-items: flex-start;
-          flex-direction: column;
-        }
-
-        .field-row,
-        .metrics,
-        .analysis-summary {
-          grid-template-columns: 1fr;
-        }
-
-        .tempo-readout {
-          min-width: 0;
-          text-align: left;
-        }
-
-        .segmented {
-          grid-template-columns: 1fr 1fr;
-        }
-
-        .frequency-row {
-          grid-template-columns: 50px minmax(0, 1fr) 38px;
-          gap: 8px;
-        }
-
-        .empty-visual {
-          height: 128px;
-          padding: 16px;
-        }
-
-        .preview-toolbar {
-          align-items: flex-start;
-          flex-direction: column;
-        }
-
-        .actions {
-          width: 100%;
-        }
-
-        .button,
-        .file-button {
+        .model-chip { white-space: normal; }
+        .panel-header { align-items: flex-start; flex-direction: column; }
+        .field-row, .metrics, .analysis-summary { grid-template-columns: 1fr; }
+        .tempo-readout { min-width: 0; text-align: left; }
+        .segmented { grid-template-columns: 1fr 1fr; }
+        .frequency-row { grid-template-columns: 50px minmax(0, 1fr) 38px; gap: 8px; }
+        .empty-visual { height: 128px; padding: 16px; }
+        .preview-toolbar { align-items: flex-start; flex-direction: column; }
+        .actions { width: 100%; }
+        .button, .file-button {
           flex: 1 1 100%;
           min-width: 0;
           width: 100%;
           white-space: normal;
         }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
       }
     </style>
   </head>
@@ -876,6 +930,7 @@
 
       const CLAUDE_MODEL = "claude-sonnet-4-20250514";
       const STORAGE_KEY = "song-to-app-gallery-v1";
+      const THEME_KEY = "song-to-app-theme";
       const API_STORAGE = {
         anthropicKey: "song-to-app-anthropic-key",
         anthropicProxy: "song-to-app-anthropic-proxy",
@@ -884,85 +939,63 @@
       };
 
       const STOPWORDS = new Set(
-        "a an and are as at be but by for from has have he her hers him his i if in into is it its me my no not of on or our ours she so than that the their them then there these they this to up was we were what when where who why will with you your yours yeah yea ooh oh la na ah im i'm ive i've dont don't cant can't wont won't".split(
-          /\s+/,
-        ),
+        "a an and are as at be but by for from has have he her hers him his i if in into is it its me my no not of on or our ours she so than that the their them then there these they this to up was we were what when where who why will with you your yours yeah yea ooh oh la na ah im i'm ive i've dont don't cant can't wont won't".split(/\s+/)
       );
 
+      const MOOD_COLORS = {
+        melancholic: "#506579",
+        tense:       "#79291f",
+        chill:       "#93c9a3",
+        uplifting:   "#ffbf2e",
+        dreamy:      "#8b6fd8",
+        euphoric:    "#00f0ff",
+        unknown:     "#b8c4d2",
+      };
+
       const palettes = {
-        melancholic: {
-          name: "muted blues, grays",
-          colors: ["#506579", "#8ca3b8", "#d8dee6", "#f0f3f1"],
-        },
-        tense: {
-          name: "deep reds, dark greens",
-          colors: ["#2d3f32", "#79291f", "#bf4a31", "#111417"],
-        },
-        chill: {
-          name: "pastels, soft greens",
-          colors: ["#93c9a3", "#d7ecd9", "#f6cdb5", "#8f91d8"],
-        },
-        uplifting: {
-          name: "warm yellows, oranges",
-          colors: ["#ffbf2e", "#ff7a45", "#0c9b72", "#22242a"],
-        },
-        dreamy: {
-          name: "purples, soft pinks",
-          colors: ["#8b6fd8", "#f0a5c8", "#b9e6d3", "#272337"],
-        },
-        euphoric: {
-          name: "neons, electric blues",
-          colors: ["#00f0ff", "#3156ff", "#ff2fb2", "#c6ff31"],
-        },
+        melancholic: { name: "muted blues, grays",     colors: ["#506579","#8ca3b8","#d8dee6","#f0f3f1"] },
+        tense:       { name: "deep reds, dark greens", colors: ["#2d3f32","#79291f","#bf4a31","#111417"] },
+        chill:       { name: "pastels, soft greens",   colors: ["#93c9a3","#d7ecd9","#f6cdb5","#8f91d8"] },
+        uplifting:   { name: "warm yellows, oranges",  colors: ["#ffbf2e","#ff7a45","#0c9b72","#22242a"] },
+        dreamy:      { name: "purples, soft pinks",    colors: ["#8b6fd8","#f0a5c8","#b9e6d3","#272337"] },
+        euphoric:    { name: "neons, electric blues",  colors: ["#00f0ff","#3156ff","#ff2fb2","#c6ff31"] },
       };
 
       const emptyAnalysis = {
-        sourceName: "",
-        duration: 0,
-        bpm: null,
-        energy: "unknown",
-        energyScore: 0,
-        dominantRange: "unknown",
-        frequencyProfile: { bass: 0, mid: 0, treble: 0 },
-        mood: "unknown",
-        palette: palettes.chill,
-        themes: [],
-        transcript: "",
-        genre: "unknown",
+        sourceName: "", duration: 0, bpm: null, energy: "unknown", energyScore: 0,
+        dominantRange: "unknown", frequencyProfile: { bass: 0, mid: 0, treble: 0 },
+        mood: "unknown", palette: palettes.chill, themes: [], transcript: "", genre: "unknown",
       };
 
       const sampleAnalysis = {
-        sourceName: "sample-neon-pulse",
-        duration: 97,
-        bpm: 118,
-        energy: "high",
-        energyScore: 0.1372,
-        dominantRange: "bass-heavy",
-        frequencyProfile: { bass: 0.46, mid: 0.34, treble: 0.2 },
-        mood: "uplifting",
-        palette: palettes.uplifting,
-        themes: ["pulse", "neon", "lift", "motion", "chorus"],
-        transcript: "",
-        genre: "pop / club",
+        sourceName: "sample-neon-pulse", duration: 97, bpm: 118, energy: "high", energyScore: 0.1372,
+        dominantRange: "bass-heavy", frequencyProfile: { bass: 0.46, mid: 0.34, treble: 0.2 },
+        mood: "uplifting", palette: palettes.uplifting,
+        themes: ["pulse","neon","lift","motion","chorus"], transcript: "", genre: "pop / club",
       };
 
-      function classNames() {
-        return Array.from(arguments).filter(Boolean).join(" ");
-      }
+      function classNames() { return Array.from(arguments).filter(Boolean).join(" "); }
 
       function getStored(name) {
-        try {
-          return sessionStorage.getItem(name) || "";
-        } catch (_error) {
-          return "";
-        }
+        try { return sessionStorage.getItem(name) || ""; } catch { return ""; }
       }
 
       function setStored(name, value) {
         try {
           if (value) sessionStorage.setItem(name, value);
           else sessionStorage.removeItem(name);
-        } catch (_error) {}
+        } catch {}
+      }
+
+      function getStoredLocal(name) {
+        try { return localStorage.getItem(name) || ""; } catch { return ""; }
+      }
+
+      function setStoredLocal(name, value) {
+        try {
+          if (value) localStorage.setItem(name, value);
+          else localStorage.removeItem(name);
+        } catch {}
       }
 
       function formatDuration(seconds) {
@@ -972,53 +1005,43 @@
         return `${mins}:${secs}`;
       }
 
-      function clamp(value, min, max) {
-        return Math.max(min, Math.min(max, value));
-      }
+      function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
 
       function computeRms(samples) {
         if (!samples || samples.length === 0) return 0;
         const stride = Math.max(1, Math.floor(samples.length / 240000));
-        let sum = 0;
-        let count = 0;
+        let sum = 0, count = 0;
         for (let i = 0; i < samples.length; i += stride) {
-          const value = samples[i];
-          sum += value * value;
-          count++;
+          const v = samples[i]; sum += v * v; count++;
         }
         return Math.sqrt(sum / Math.max(1, count));
       }
 
       function classifyEnergy(rms) {
         if (rms < 0.045) return "low";
-        if (rms < 0.11) return "medium";
+        if (rms < 0.11)  return "medium";
         return "high";
       }
 
       function deriveMood(bpm, energy) {
-        const tempo = Number.isFinite(bpm) ? bpm : 90;
-        const high = energy === "high";
-        if (tempo < 70 && !high) return "melancholic";
-        if (tempo < 70 && high) return "tense";
-        if (tempo <= 120 && !high) return "chill";
-        if (tempo <= 120 && high) return "uplifting";
-        if (tempo > 120 && !high) return "dreamy";
+        const t = Number.isFinite(bpm) ? bpm : 90;
+        const hi = energy === "high";
+        if (t < 70 && !hi) return "melancholic";
+        if (t < 70 &&  hi) return "tense";
+        if (t <= 120 && !hi) return "chill";
+        if (t <= 120 &&  hi) return "uplifting";
+        if (t > 120 && !hi) return "dreamy";
         return "euphoric";
       }
 
       function mixToMono(audioBuffer, maxSeconds) {
-        const sampleRate = audioBuffer.sampleRate;
-        const length = Math.min(
-          audioBuffer.length,
-          Math.max(1, Math.floor(maxSeconds * sampleRate)),
-        );
-        const mono = new Float32Array(length);
-        const channels = audioBuffer.numberOfChannels || 1;
-        for (let channel = 0; channel < channels; channel++) {
-          const source = audioBuffer.getChannelData(channel);
-          for (let i = 0; i < length; i++) {
-            mono[i] += source[i] / channels;
-          }
+        const sr = audioBuffer.sampleRate;
+        const len = Math.min(audioBuffer.length, Math.max(1, Math.floor(maxSeconds * sr)));
+        const mono = new Float32Array(len);
+        const ch = audioBuffer.numberOfChannels || 1;
+        for (let c = 0; c < ch; c++) {
+          const src = audioBuffer.getChannelData(c);
+          for (let i = 0; i < len; i++) mono[i] += src[i] / ch;
         }
         return mono;
       }
@@ -1031,35 +1054,29 @@
           const start = i * bucket;
           const end = Math.min(samples.length, start + bucket);
           let peak = 0;
-          for (let j = start; j < end; j++) {
-            peak = Math.max(peak, Math.abs(samples[j]));
-          }
+          for (let j = start; j < end; j++) peak = Math.max(peak, Math.abs(samples[j]));
           waveform.push(clamp(peak, 0.02, 1));
         }
         return waveform;
       }
 
       function createSampleWaveform(bars) {
-        return Array.from({ length: bars }, (_, index) => {
-          const progress = index / Math.max(1, bars - 1);
-          const kick = Math.pow(Math.max(0, Math.sin(progress * Math.PI * 38)), 7);
-          const phrase = 0.18 + 0.22 * Math.sin(progress * Math.PI * 6 + 0.8);
-          const shimmer = 0.08 * Math.sin(progress * Math.PI * 91);
+        return Array.from({ length: bars }, (_, i) => {
+          const p = i / Math.max(1, bars - 1);
+          const kick = Math.pow(Math.max(0, Math.sin(p * Math.PI * 38)), 7);
+          const phrase = 0.18 + 0.22 * Math.sin(p * Math.PI * 6 + 0.8);
+          const shimmer = 0.08 * Math.sin(p * Math.PI * 91);
           return clamp(0.08 + phrase + kick * 0.66 + shimmer, 0.04, 0.98);
         });
       }
 
-      function smooth(values, windowSize) {
+      function smooth(values, win) {
         const result = new Float32Array(values.length);
         for (let i = 0; i < values.length; i++) {
-          let sum = 0;
-          let count = 0;
-          for (let j = -windowSize; j <= windowSize; j++) {
-            const index = i + j;
-            if (index >= 0 && index < values.length) {
-              sum += values[index];
-              count++;
-            }
+          let sum = 0, count = 0;
+          for (let j = -win; j <= win; j++) {
+            const idx = i + j;
+            if (idx >= 0 && idx < values.length) { sum += values[idx]; count++; }
           }
           result[i] = sum / count;
         }
@@ -1068,75 +1085,51 @@
 
       function estimateBpm(samples, sampleRate) {
         if (!samples || samples.length < sampleRate * 4) return null;
-        const hop = 512;
-        const frame = 1024;
-        const envelopeLength = Math.max(0, Math.floor((samples.length - frame) / hop));
-        const envelope = new Float32Array(envelopeLength);
-
-        for (let i = 0; i < envelopeLength; i++) {
+        const hop = 512, frame = 1024;
+        const envLen = Math.max(0, Math.floor((samples.length - frame) / hop));
+        const envelope = new Float32Array(envLen);
+        for (let i = 0; i < envLen; i++) {
           const start = i * hop;
           let sum = 0;
-          for (let j = 0; j < frame; j++) {
-            const value = samples[start + j] || 0;
-            sum += value * value;
-          }
+          for (let j = 0; j < frame; j++) { const v = samples[start + j] || 0; sum += v * v; }
           envelope[i] = Math.sqrt(sum / frame);
         }
-
         const smoothed = smooth(envelope, 3);
         let mean = 0;
-        for (const value of smoothed) mean += value;
+        for (const v of smoothed) mean += v;
         mean /= Math.max(1, smoothed.length);
-
         let variance = 0;
-        for (const value of smoothed) variance += (value - mean) * (value - mean);
+        for (const v of smoothed) variance += (v - mean) * (v - mean);
         const std = Math.sqrt(variance / Math.max(1, smoothed.length));
         const threshold = mean + std * 0.68;
-        const minPeakDistance = Math.floor((sampleRate * 0.24) / hop);
+        const minDist = Math.floor((sampleRate * 0.24) / hop);
         const peaks = [];
         let lastPeak = -Infinity;
-
         for (let i = 2; i < smoothed.length - 2; i++) {
-          const value = smoothed[i];
-          const localMax =
-            value > smoothed[i - 1] &&
-            value >= smoothed[i + 1] &&
-            value > smoothed[i - 2] &&
-            value >= smoothed[i + 2];
-          if (value > threshold && localMax && i - lastPeak >= minPeakDistance) {
-            peaks.push((i * hop) / sampleRate);
-            lastPeak = i;
+          const v = smoothed[i];
+          const localMax = v > smoothed[i-1] && v >= smoothed[i+1] && v > smoothed[i-2] && v >= smoothed[i+2];
+          if (v > threshold && localMax && i - lastPeak >= minDist) {
+            peaks.push((i * hop) / sampleRate); lastPeak = i;
           }
         }
-
         if (peaks.length < 4) return null;
-
         const bins = new Map();
         for (let i = 0; i < peaks.length; i++) {
           for (let j = i + 1; j < Math.min(peaks.length, i + 8); j++) {
             const interval = peaks[j] - peaks[i];
             if (interval < 0.32 || interval > 2.1) continue;
             let bpm = 60 / interval;
-            while (bpm < 60) bpm *= 2;
+            while (bpm < 60)  bpm *= 2;
             while (bpm > 190) bpm /= 2;
-            const rounded = Math.round(bpm);
-            const previous = bins.get(rounded) || 0;
-            bins.set(rounded, previous + 1 / (j - i));
+            const r = Math.round(bpm);
+            bins.set(r, (bins.get(r) || 0) + 1 / (j - i));
           }
         }
-
-        let bestBpm = null;
-        let bestScore = 0;
+        let bestBpm = null, bestScore = 0;
         for (const [bpm, score] of bins.entries()) {
-          let neighborhood = score;
-          neighborhood += bins.get(bpm - 1) || 0;
-          neighborhood += bins.get(bpm + 1) || 0;
-          if (neighborhood > bestScore) {
-            bestScore = neighborhood;
-            bestBpm = bpm;
-          }
+          let nb = score + (bins.get(bpm-1)||0) + (bins.get(bpm+1)||0);
+          if (nb > bestScore) { bestScore = nb; bestBpm = bpm; }
         }
-
         return bestBpm ? clamp(bestBpm, 45, 210) : null;
       }
 
@@ -1144,17 +1137,13 @@
         const Offline = window.OfflineAudioContext || window.webkitOfflineAudioContext;
         if (!Offline) return 0;
         const offline = new Offline(1, mono.length, sampleRate);
-        const buffer = offline.createBuffer(1, mono.length, sampleRate);
-        buffer.copyToChannel(mono, 0);
-        const source = offline.createBufferSource();
+        const buf = offline.createBuffer(1, mono.length, sampleRate);
+        buf.copyToChannel(mono, 0);
+        const src = offline.createBufferSource();
         const filter = offline.createBiquadFilter();
-        source.buffer = buffer;
-        filter.type = type;
-        filter.frequency.value = frequency;
+        src.buffer = buf; filter.type = type; filter.frequency.value = frequency;
         if (q) filter.Q.value = q;
-        source.connect(filter);
-        filter.connect(offline.destination);
-        source.start(0);
+        src.connect(filter); filter.connect(offline.destination); src.start(0);
         const rendered = await offline.startRendering();
         return computeRms(rendered.getChannelData(0));
       }
@@ -1162,83 +1151,64 @@
       async function estimateFrequencyProfile(mono, sampleRate) {
         try {
           const [bass, mid, treble] = await Promise.all([
-            renderFilteredRms(mono, sampleRate, "lowpass", 250, 0.7),
+            renderFilteredRms(mono, sampleRate, "lowpass",  250,  0.7),
             renderFilteredRms(mono, sampleRate, "bandpass", 1100, 0.8),
             renderFilteredRms(mono, sampleRate, "highpass", 3600, 0.7),
           ]);
           const total = bass + mid + treble || 1;
-          const profile = {
-            bass: bass / total,
-            mid: mid / total,
-            treble: treble / total,
-          };
+          const profile = { bass: bass/total, mid: mid/total, treble: treble/total };
           let dominantRange = "mid";
-          if (profile.bass > profile.mid && profile.bass > profile.treble) {
-            dominantRange = "bass-heavy";
-          } else if (profile.treble > profile.mid && profile.treble > profile.bass) {
-            dominantRange = "treble";
-          }
+          if (profile.bass > profile.mid && profile.bass > profile.treble) dominantRange = "bass-heavy";
+          else if (profile.treble > profile.mid && profile.treble > profile.bass) dominantRange = "treble";
           return { profile, dominantRange };
-        } catch (_error) {
-          return {
-            profile: { bass: 0.33, mid: 0.34, treble: 0.33 },
-            dominantRange: "mid",
-          };
+        } catch {
+          return { profile: { bass: 0.33, mid: 0.34, treble: 0.33 }, dominantRange: "mid" };
         }
       }
 
       function guessGenre(bpm, dominantRange, energy) {
-        const tempo = Number.isFinite(bpm) ? bpm : 90;
-        if (tempo > 135 && dominantRange === "bass-heavy") return "dance / electronic";
-        if (tempo > 125 && energy === "high") return "pop / club";
-        if (tempo >= 78 && tempo <= 110 && dominantRange === "bass-heavy") return "hip-hop / R&B";
-        if (tempo < 75 && energy !== "high") return "ambient / ballad";
-        if (dominantRange === "treble" && tempo > 115) return "indie pop / synth";
-        if (tempo >= 90 && tempo <= 125) return "alt-pop / groove";
+        const t = Number.isFinite(bpm) ? bpm : 90;
+        if (t > 135 && dominantRange === "bass-heavy") return "dance / electronic";
+        if (t > 125 && energy === "high") return "pop / club";
+        if (t >= 78 && t <= 110 && dominantRange === "bass-heavy") return "hip-hop / R&B";
+        if (t < 75 && energy !== "high") return "ambient / ballad";
+        if (dominantRange === "treble" && t > 115) return "indie pop / synth";
+        if (t >= 90 && t <= 125) return "alt-pop / groove";
         return "experimental / cinematic";
       }
 
       function extractThemesFromTranscript(transcript) {
         if (!transcript) return [];
         const counts = new Map();
-        const words = transcript
-          .toLowerCase()
-          .replace(/[^a-z0-9'\s-]/g, " ")
-          .split(/\s+/)
-          .map((word) => word.replace(/^'+|'+$/g, ""))
-          .filter((word) => word.length > 2 && !STOPWORDS.has(word));
-        for (const word of words) counts.set(word, (counts.get(word) || 0) + 1);
-        return Array.from(counts.entries())
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 10)
-          .map(([word]) => word);
+        const words = transcript.toLowerCase()
+          .replace(/[^a-z0-9'\s-]/g, " ").split(/\s+/)
+          .map(w => w.replace(/^'+|'+$/g, ""))
+          .filter(w => w.length > 2 && !STOPWORDS.has(w));
+        for (const w of words) counts.set(w, (counts.get(w) || 0) + 1);
+        return Array.from(counts.entries()).sort((a,b) => b[1]-a[1]).slice(0,10).map(([w]) => w);
       }
 
       function instrumentalThemes(analysis) {
-        const themes = [];
-        if (analysis.mood !== "unknown") themes.push(analysis.mood);
-        if (analysis.dominantRange === "bass-heavy") themes.push("pulse", "weight", "movement");
-        if (analysis.dominantRange === "treble") themes.push("spark", "air", "glitter");
-        if (analysis.energy === "high") themes.push("momentum", "release");
-        if (analysis.energy === "low") themes.push("space", "reflection");
-        if (analysis.genre !== "unknown") themes.push(analysis.genre.split(" / ")[0]);
-        return Array.from(new Set(themes)).slice(0, 10);
+        const t = [];
+        if (analysis.mood !== "unknown") t.push(analysis.mood);
+        if (analysis.dominantRange === "bass-heavy") t.push("pulse","weight","movement");
+        if (analysis.dominantRange === "treble") t.push("spark","air","glitter");
+        if (analysis.energy === "high") t.push("momentum","release");
+        if (analysis.energy === "low")  t.push("space","reflection");
+        if (analysis.genre !== "unknown") t.push(analysis.genre.split(" / ")[0]);
+        return Array.from(new Set(t)).slice(0, 10);
       }
 
       function makePrompt(analysis, appType, feedback, variation) {
         const colors = analysis.palette.colors.join(", ");
-        const themes = (analysis.themes.length ? analysis.themes : instrumentalThemes(analysis)).join(
-          ", ",
-        );
+        const themes = (analysis.themes.length ? analysis.themes : instrumentalThemes(analysis)).join(", ");
         const bpm = Number.isFinite(analysis.bpm) ? analysis.bpm : "unknown";
-        const typeLine =
-          appType === "random"
-            ? "Choose the most fitting format yourself."
-            : `Create it as a ${appType}.`;
+        const typeLine = appType === "random"
+          ? "Choose the most fitting format yourself."
+          : `Create it as a ${appType}.`;
         const feedbackLine = feedback
           ? `The user feedback to account for: ${feedback}.`
           : "No user feedback yet.";
-
         return `You are a creative web developer. Generate a self-contained HTML+CSS+JS mini app inspired by a song with these characteristics:
 
 - Mood: ${analysis.mood}
@@ -1271,14 +1241,8 @@ Use only vanilla HTML, CSS, and JavaScript. Do not load external libraries, font
       }
 
       function escapeHtml(value) {
-        const replacements = {
-          "&": "&amp;",
-          "<": "&lt;",
-          ">": "&gt;",
-          '"': "&quot;",
-          "'": "&#39;",
-        };
-        return String(value ?? "").replace(/[&<>"']/g, (char) => replacements[char]);
+        const map = { "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" };
+        return String(value ?? "").replace(/[&<>"']/g, c => map[c]);
       }
 
       function safeColor(color, fallback) {
@@ -1286,14 +1250,12 @@ Use only vanilla HTML, CSS, and JavaScript. Do not load external libraries, font
       }
 
       function generateDemoHtml(analysis, appType, variation) {
-        const colors = (analysis.palette?.colors || palettes.chill.colors).map((color, index) =>
-          safeColor(color, palettes.chill.colors[index % palettes.chill.colors.length]),
-        );
+        const colors = (analysis.palette?.colors || palettes.chill.colors)
+          .map((c, i) => safeColor(c, palettes.chill.colors[i % palettes.chill.colors.length]));
         const bpm = Number.isFinite(analysis.bpm) ? analysis.bpm : 96;
         const beatMs = Math.round(60000 / clamp(bpm, 45, 190));
         const themes = (analysis.themes.length ? analysis.themes : instrumentalThemes(analysis))
-          .slice(0, 7)
-          .map(escapeHtml);
+          .slice(0, 7).map(escapeHtml);
         const title = `${escapeHtml(analysis.mood)} ${escapeHtml(appType === "random" ? "song app" : appType)}`;
         const colorJson = JSON.stringify(colors);
         const themeJson = JSON.stringify(themes);
@@ -1305,42 +1267,27 @@ Use only vanilla HTML, CSS, and JavaScript. Do not load external libraries, font
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${title}</title>
 <style>
-  :root {
-    --c0: ${colors[0]};
-    --c1: ${colors[1]};
-    --c2: ${colors[2]};
-    --c3: ${colors[3]};
-    --ink: #f8fbff;
-    --shade: #101217;
-  }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; min-height: 100%; background: var(--shade); color: var(--ink); font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
-  body { overflow: hidden; }
-  main { min-height: 100vh; display: grid; place-items: center; padding: 28px; background:
-    radial-gradient(circle at 18% 18%, color-mix(in srgb, var(--c0), transparent 48%), transparent 34%),
-    radial-gradient(circle at 82% 22%, color-mix(in srgb, var(--c2), transparent 58%), transparent 32%),
-    linear-gradient(135deg, #101217, #20242b 58%, #121417); }
-  .frame { width: min(100%, 980px); min-height: min(680px, calc(100vh - 56px)); border: 1px solid rgba(255,255,255,.22); border-radius: 18px; position: relative; overflow: hidden; background: rgba(8,10,14,.78); box-shadow: 0 24px 70px rgba(0,0,0,.36); }
-  canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
-  .content { position: relative; z-index: 2; min-height: inherit; display: grid; grid-template-rows: 1fr auto; padding: clamp(22px, 5vw, 54px); pointer-events: none; }
-  h1 { margin: 0; max-width: 760px; font-size: clamp(3rem, 9vw, 7.5rem); line-height: .86; letter-spacing: 0; text-transform: uppercase; }
-  .meta { align-self: end; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
-  .pill { border: 1px solid rgba(255,255,255,.24); border-radius: 999px; padding: 9px 13px; background: rgba(255,255,255,.08); backdrop-filter: blur(10px); font-weight: 800; }
-  .themes { position: absolute; right: clamp(18px, 4vw, 42px); top: clamp(18px, 4vw, 42px); z-index: 3; display: grid; gap: 8px; text-align: right; }
-  .theme { color: rgba(255,255,255,.78); font-size: clamp(.78rem, 1.5vw, 1rem); font-weight: 800; text-transform: uppercase; }
-  .hint { position: absolute; left: clamp(18px, 4vw, 42px); bottom: clamp(18px, 4vw, 42px); z-index: 3; color: rgba(255,255,255,.62); font-size: .92rem; }
-  @media (max-width: 700px) {
-    .frame { min-height: calc(100vh - 32px); border-radius: 12px; }
-    .themes { text-align: left; left: 22px; right: auto; top: auto; bottom: 74px; }
-    .hint { display: none; }
-  }
+  :root { --c0:${colors[0]};--c1:${colors[1]};--c2:${colors[2]};--c3:${colors[3]};--ink:#f8fbff;--shade:#101217; }
+  *{box-sizing:border-box;}html,body{margin:0;min-height:100%;background:var(--shade);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,sans-serif;}
+  body{overflow:hidden;}
+  main{min-height:100vh;display:grid;place-items:center;padding:28px;background:radial-gradient(circle at 18% 18%,color-mix(in srgb,var(--c0),transparent 48%),transparent 34%),radial-gradient(circle at 82% 22%,color-mix(in srgb,var(--c2),transparent 58%),transparent 32%),linear-gradient(135deg,#101217,#20242b 58%,#121417);}
+  .frame{width:min(100%,980px);min-height:min(680px,calc(100vh - 56px));border:1px solid rgba(255,255,255,.22);border-radius:18px;position:relative;overflow:hidden;background:rgba(8,10,14,.78);box-shadow:0 24px 70px rgba(0,0,0,.36);}
+  canvas{position:absolute;inset:0;width:100%;height:100%;}
+  .content{position:relative;z-index:2;min-height:inherit;display:grid;grid-template-rows:1fr auto;padding:clamp(22px,5vw,54px);pointer-events:none;}
+  h1{margin:0;max-width:760px;font-size:clamp(3rem,9vw,7.5rem);line-height:.86;letter-spacing:0;text-transform:uppercase;}
+  .meta{align-self:end;display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
+  .pill{border:1px solid rgba(255,255,255,.24);border-radius:999px;padding:9px 13px;background:rgba(255,255,255,.08);backdrop-filter:blur(10px);font-weight:800;}
+  .themes{position:absolute;right:clamp(18px,4vw,42px);top:clamp(18px,4vw,42px);z-index:3;display:grid;gap:8px;text-align:right;}
+  .theme{color:rgba(255,255,255,.78);font-size:clamp(.78rem,1.5vw,1rem);font-weight:800;text-transform:uppercase;}
+  .hint{position:absolute;left:clamp(18px,4vw,42px);bottom:clamp(18px,4vw,42px);z-index:3;color:rgba(255,255,255,.62);font-size:.92rem;}
+  @media(max-width:700px){.frame{min-height:calc(100vh - 32px);border-radius:12px;}.themes{text-align:left;left:22px;right:auto;top:auto;bottom:74px;}.hint{display:none;}}
 </style>
 </head>
 <body>
 <main>
   <section class="frame" aria-label="Generated demo app">
     <canvas id="stage"></canvas>
-    <div class="themes">${themes.map((theme) => `<div class="theme">${theme}</div>`).join("")}</div>
+    <div class="themes">${themes.map(t => `<div class="theme">${t}</div>`).join("")}</div>
     <div class="content">
       <h1>${escapeHtml(analysis.mood)}<br>${escapeHtml(analysis.energy)}</h1>
       <div class="meta">
@@ -1353,63 +1300,36 @@ Use only vanilla HTML, CSS, and JavaScript. Do not load external libraries, font
   </section>
 </main>
 <script>
-const canvas = document.getElementById("stage");
-const ctx = canvas.getContext("2d");
-const colors = ${colorJson};
-const themes = ${themeJson};
-const beatMs = ${beatMs};
-const variation = ${Number(variation) || 1};
-let pointer = { x: 0.5, y: 0.5 };
-function fit() {
-  const dpr = window.devicePixelRatio || 1;
-  const rect = canvas.getBoundingClientRect();
-  canvas.width = Math.max(1, Math.floor(rect.width * dpr));
-  canvas.height = Math.max(1, Math.floor(rect.height * dpr));
-}
-function draw(time) {
-  const w = canvas.width;
-  const h = canvas.height;
-  const beat = (Math.sin((time / beatMs) * Math.PI * 2) + 1) / 2;
-  ctx.clearRect(0, 0, w, h);
-  ctx.globalCompositeOperation = "source-over";
-  ctx.fillStyle = "rgba(8,10,14,.26)";
-  ctx.fillRect(0, 0, w, h);
-  ctx.globalCompositeOperation = "lighter";
-  for (let i = 0; i < 42; i++) {
-    const p = i / 42;
-    const radius = (42 + beat * 58 + (i % 7) * 16) * (w / 980);
-    const angle = time * 0.00018 * (i % 2 ? 1 : -1) + p * Math.PI * 2 + variation;
-    const x = w * (0.5 + Math.cos(angle) * (0.16 + pointer.x * 0.18));
-    const y = h * (0.5 + Math.sin(angle * 1.4) * (0.18 + pointer.y * 0.16));
-    const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
-    gradient.addColorStop(0, colors[i % colors.length] + "dd");
-    gradient.addColorStop(1, colors[(i + 2) % colors.length] + "00");
-    ctx.fillStyle = gradient;
-    ctx.beginPath();
-    ctx.arc(x, y, radius, 0, Math.PI * 2);
-    ctx.fill();
+const canvas=document.getElementById("stage"),ctx=canvas.getContext("2d");
+const colors=${colorJson},themes=${themeJson},beatMs=${beatMs},variation=${Number(variation)||1};
+let pointer={x:0.5,y:0.5};
+function fit(){const dpr=window.devicePixelRatio||1,r=canvas.getBoundingClientRect();canvas.width=Math.max(1,Math.floor(r.width*dpr));canvas.height=Math.max(1,Math.floor(r.height*dpr));}
+function draw(time){
+  const w=canvas.width,h=canvas.height,beat=(Math.sin((time/beatMs)*Math.PI*2)+1)/2;
+  ctx.clearRect(0,0,w,h);ctx.globalCompositeOperation="source-over";
+  ctx.fillStyle="rgba(8,10,14,.26)";ctx.fillRect(0,0,w,h);
+  ctx.globalCompositeOperation="lighter";
+  for(let i=0;i<42;i++){
+    const p=i/42,radius=(42+beat*58+(i%7)*16)*(w/980);
+    const angle=time*0.00018*(i%2?1:-1)+p*Math.PI*2+variation;
+    const x=w*(0.5+Math.cos(angle)*(0.16+pointer.x*0.18));
+    const y=h*(0.5+Math.sin(angle*1.4)*(0.18+pointer.y*0.16));
+    const g=ctx.createRadialGradient(x,y,0,x,y,radius);
+    g.addColorStop(0,colors[i%colors.length]+"dd");g.addColorStop(1,colors[(i+2)%colors.length]+"00");
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,radius,0,Math.PI*2);ctx.fill();
   }
-  ctx.globalCompositeOperation = "source-over";
-  ctx.strokeStyle = "rgba(255,255,255,.58)";
-  ctx.lineWidth = Math.max(2, w / 420);
-  ctx.beginPath();
-  for (let i = 0; i < 96; i++) {
-    const x = (i / 95) * w;
-    const noise = Math.sin(i * 0.54 + time * 0.006 + variation) * 0.28 + Math.sin(i * 0.17 + time * 0.002) * 0.18;
-    const y = h * (0.54 + noise * (0.3 + beat * 0.28));
-    if (i === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
+  ctx.globalCompositeOperation="source-over";ctx.strokeStyle="rgba(255,255,255,.58)";
+  ctx.lineWidth=Math.max(2,w/420);ctx.beginPath();
+  for(let i=0;i<96;i++){
+    const x=(i/95)*w,noise=Math.sin(i*0.54+time*0.006+variation)*0.28+Math.sin(i*0.17+time*0.002)*0.18;
+    const y=h*(0.54+noise*(0.3+beat*0.28));
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
   }
-  ctx.stroke();
-  requestAnimationFrame(draw);
+  ctx.stroke();requestAnimationFrame(draw);
 }
-window.addEventListener("resize", fit);
-window.addEventListener("pointermove", (event) => {
-  pointer.x = event.clientX / Math.max(1, window.innerWidth);
-  pointer.y = event.clientY / Math.max(1, window.innerHeight);
-});
-fit();
-draw(0);
+window.addEventListener("resize",fit);
+window.addEventListener("pointermove",e=>{pointer.x=e.clientX/Math.max(1,window.innerWidth);pointer.y=e.clientY/Math.max(1,window.innerHeight);});
+fit();draw(0);
 <\/script>
 </body>
 </html>`;
@@ -1421,13 +1341,7 @@ draw(0);
         if (typeof json.text === "string") return json.text;
         if (typeof json.content === "string") return json.content;
         if (Array.isArray(json.content)) {
-          return json.content
-            .map((part) => {
-              if (typeof part === "string") return part;
-              if (part && typeof part.text === "string") return part.text;
-              return "";
-            })
-            .join("");
+          return json.content.map(p => (typeof p === "string" ? p : p?.text || "")).join("");
         }
         if (json.message) return extractAnthropicJsonText(json.message);
         return "";
@@ -1436,42 +1350,27 @@ draw(0);
       async function readAnthropicStream(response, onText) {
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
-        let buffer = "";
-        let full = "";
-
+        let buffer = "", full = "";
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
           buffer += decoder.decode(value, { stream: true });
           const events = buffer.split(/\r?\n\r?\n/);
           buffer = events.pop() || "";
-
-          for (const eventText of events) {
-            const dataLines = eventText
-              .split(/\r?\n/)
-              .filter((line) => line.startsWith("data:"))
-              .map((line) => line.slice(5).trim());
+          for (const ev of events) {
+            const dataLines = ev.split(/\r?\n/)
+              .filter(l => l.startsWith("data:"))
+              .map(l => l.slice(5).trim());
             for (const line of dataLines) {
               if (!line || line === "[DONE]") continue;
               try {
                 const event = JSON.parse(line);
-                const token =
-                  event.delta?.text ||
-                  event.content_block?.text ||
-                  event.message?.content?.[0]?.text ||
-                  "";
-                if (token) {
-                  full += token;
-                  onText(full);
-                }
-              } catch (_error) {
-                full += line;
-                onText(full);
-              }
+                const token = event.delta?.text || event.content_block?.text || event.message?.content?.[0]?.text || "";
+                if (token) { full += token; onText(full); }
+              } catch { full += line; onText(full); }
             }
           }
         }
-
         return full;
       }
 
@@ -1490,223 +1389,173 @@ draw(0);
 
       async function callClaude({ prompt, apiKey, proxyUrl, onText }) {
         const url = proxyUrl || "https://api.anthropic.com/v1/messages";
-        if (!proxyUrl && !apiKey) {
-          throw new Error("Add an Anthropic API key or a Claude proxy URL.");
-        }
-
+        if (!proxyUrl && !apiKey) throw new Error("Add an Anthropic API key or a Claude proxy URL.");
         const body = {
           model: CLAUDE_MODEL,
           max_tokens: 6000,
           stream: true,
           messages: [{ role: "user", content: prompt }],
         };
-
         const headers = { "Content-Type": "application/json" };
         if (!proxyUrl) {
           headers["x-api-key"] = apiKey;
           headers["anthropic-version"] = "2023-06-01";
           headers["anthropic-dangerous-direct-browser-access"] = "true";
         }
-
-        const response = await fetch(url, {
-          method: "POST",
-          headers,
-          body: JSON.stringify(body),
-        });
-
+        const response = await fetch(url, { method: "POST", headers, body: JSON.stringify(body) });
         if (!response.ok) {
-          const errorText = await response.text().catch(() => "");
-          throw new Error(`Claude request failed (${response.status}). ${errorText.slice(0, 400)}`);
+          const errText = await response.text().catch(() => "");
+          throw new Error(`Claude request failed (${response.status}). ${errText.slice(0, 400)}`);
         }
-
-        const contentType = response.headers.get("content-type") || "";
-        if (contentType.includes("text/event-stream") && response.body) {
-          return readAnthropicStream(response, onText);
-        }
-        if (contentType.includes("application/json")) {
+        const ct = response.headers.get("content-type") || "";
+        if (ct.includes("text/event-stream") && response.body) return readAnthropicStream(response, onText);
+        if (ct.includes("application/json")) {
           const json = await response.json();
           const text = extractAnthropicJsonText(json);
-          onText(text);
-          return text;
+          onText(text); return text;
         }
         if (response.body) return readPlainStream(response, onText);
         const text = await response.text();
-        onText(text);
-        return text;
+        onText(text); return text;
       }
 
       async function callWhisper({ blob, fileName, apiKey, proxyUrl }) {
-        if (!apiKey && !proxyUrl) {
-          throw new Error("Add an OpenAI API key or a Whisper proxy URL.");
-        }
+        if (!apiKey && !proxyUrl) throw new Error("Add an OpenAI API key or a Whisper proxy URL.");
         const form = new FormData();
         const safeName = fileName && /\.[a-z0-9]+$/i.test(fileName) ? fileName : "song.webm";
         form.append("file", new File([blob], safeName, { type: blob.type || "audio/webm" }));
         form.append("model", "whisper-1");
         form.append("response_format", "json");
-
         const response = await fetch(proxyUrl || "https://api.openai.com/v1/audio/transcriptions", {
           method: "POST",
           headers: proxyUrl ? undefined : { Authorization: `Bearer ${apiKey}` },
           body: form,
         });
-
         if (!response.ok) {
-          const errorText = await response.text().catch(() => "");
-          throw new Error(`Whisper request failed (${response.status}). ${errorText.slice(0, 300)}`);
+          const errText = await response.text().catch(() => "");
+          throw new Error(`Whisper request failed (${response.status}). ${errText.slice(0, 300)}`);
         }
         const json = await response.json();
         return json.text || "";
       }
 
       function normalizeFileName(name, fallback) {
-        return (
-          (name || fallback)
-            .replace(/[^a-z0-9]+/gi, "-")
-            .replace(/^-|-$/g, "")
-            .toLowerCase() || fallback
-        );
+        return (name || fallback).replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase() || fallback;
       }
 
       function formatDateTime(value) {
         const date = new Date(value);
         if (Number.isNaN(date.getTime())) return "";
-        return date.toLocaleString(undefined, {
-          month: "short",
-          day: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        });
+        return date.toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
       }
 
       async function copyText(text) {
         if (!text) return false;
         if (navigator.clipboard?.writeText) {
-          try {
-            await navigator.clipboard.writeText(text);
-            return true;
-          } catch (_error) {}
+          try { await navigator.clipboard.writeText(text); return true; } catch {}
         }
-
-        const textarea = document.createElement("textarea");
-        textarea.value = text;
-        textarea.setAttribute("readonly", "");
-        textarea.style.position = "fixed";
-        textarea.style.left = "-9999px";
-        textarea.style.top = "0";
-        document.body.appendChild(textarea);
-        textarea.select();
-        try {
-          return document.execCommand("copy");
-        } catch (_error) {
-          return false;
-        } finally {
-          textarea.remove();
-        }
+        const ta = document.createElement("textarea");
+        ta.value = text; ta.setAttribute("readonly", "");
+        ta.style.cssText = "position:fixed;left:-9999px;top:0";
+        document.body.appendChild(ta); ta.select();
+        try { return document.execCommand("copy"); } catch { return false; }
+        finally { ta.remove(); }
       }
 
       function downloadText(text, name, type) {
         const blob = new Blob([text], { type });
         const url = URL.createObjectURL(blob);
-        const anchor = document.createElement("a");
-        anchor.href = url;
-        anchor.download = name;
-        document.body.appendChild(anchor);
-        anchor.click();
-        anchor.remove();
+        const a = document.createElement("a");
+        a.href = url; a.download = name;
+        document.body.appendChild(a); a.click(); a.remove();
         URL.revokeObjectURL(url);
       }
 
       function downloadHtml(html, name) {
-        downloadText(
-          html,
-          `${normalizeFileName(name, "song-app")}.html`,
-          "text/html;charset=utf-8",
-        );
+        downloadText(html, `${normalizeFileName(name, "song-app")}.html`, "text/html;charset=utf-8");
+      }
+
+      function openInTab(html) {
+        const blob = new Blob([html], { type: "text/html" });
+        const url = URL.createObjectURL(blob);
+        window.open(url, "_blank", "noopener");
+        // Revoke after a generous delay so the tab has time to load
+        setTimeout(() => URL.revokeObjectURL(url), 30000);
       }
 
       function loadGallery() {
-        try {
-          return normalizeGallery(JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"));
-        } catch (_error) {
-          return [];
-        }
+        try { return normalizeGallery(JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]")); }
+        catch { return []; }
       }
 
       function normalizeGallery(items) {
         if (!Array.isArray(items)) return [];
-        return items
-          .map((item, index) => {
-            if (!item || typeof item.html !== "string" || !item.html.trim()) return null;
-            return {
-              id: String(item.id || `${Date.now()}-${index}`),
-              html: item.html,
-              engine: item.engine || "App",
-              mood: item.mood || "unknown",
-              bpm: Number.isFinite(item.bpm) ? item.bpm : null,
-              sourceName: item.sourceName || "song",
-              createdAt: item.createdAt || new Date().toISOString(),
-            };
-          })
-          .filter(Boolean)
-          .slice(0, 8);
+        return items.map((item, i) => {
+          if (!item || typeof item.html !== "string" || !item.html.trim()) return null;
+          return {
+            id: String(item.id || `${Date.now()}-${i}`),
+            html: item.html,
+            engine: item.engine || "App",
+            mood: item.mood || "unknown",
+            bpm: Number.isFinite(item.bpm) ? item.bpm : null,
+            sourceName: item.sourceName || "song",
+            createdAt: item.createdAt || new Date().toISOString(),
+          };
+        }).filter(Boolean).slice(0, 8);
       }
 
       function saveGallery(items) {
-        try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(normalizeGallery(items)));
-        } catch (_error) {}
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(normalizeGallery(items))); } catch {}
       }
+
+      /* ─── Small reusable components ─── */
 
       function Button({ children, className, ...props }) {
         return h("button", { className: classNames("button", className), ...props }, children);
       }
 
-      function Field({ label, children }) {
-        return h("label", { className: "field" }, h("span", null, label), children);
+      function Field({ label, id, children }) {
+        return h("label", { className: "field", htmlFor: id },
+          h("span", null, label),
+          children
+        );
       }
 
       function Metric({ label, value }) {
-        return h(
-          "div",
-          { className: "metric" },
+        return h("div", { className: "metric" },
           h("div", { className: "metric-label" }, label),
-          h("div", { className: "metric-value", title: String(value) }, value),
+          h("div", { className: "metric-value", title: String(value) }, value)
+        );
+      }
+
+      function ErrorBox({ message }) {
+        if (!message) return null;
+        return h("div", { className: "error-box", role: "alert" },
+          h("span", { className: "error-box-icon", "aria-hidden": "true" }, "⚠"),
+          h("span", null, message)
         );
       }
 
       function FrequencyBars({ profile }) {
-        const rows = [
-          ["Bass", profile?.bass || 0],
-          ["Mid", profile?.mid || 0],
-          ["Treble", profile?.treble || 0],
-        ];
-
-        return h(
-          "div",
-          { className: "frequency-bars", "aria-label": "Frequency balance" },
+        const rows = [["Bass", profile?.bass||0], ["Mid", profile?.mid||0], ["Treble", profile?.treble||0]];
+        return h("div", { className: "frequency-bars", "aria-label": "Frequency balance" },
           rows.map(([label, value]) =>
-            h(
-              "div",
-              { className: "frequency-row", key: label },
+            h("div", { className: "frequency-row", key: label },
               h("span", null, label),
-              h(
-                "span",
-                { className: "frequency-track" },
+              h("span", { className: "frequency-track" },
                 h("span", {
                   className: "frequency-fill",
                   style: { width: `${Math.round(clamp(value, 0, 1) * 100)}%` },
-                }),
+                })
               ),
-              h("span", null, `${Math.round(clamp(value, 0, 1) * 100)}%`),
-            ),
-          ),
+              h("span", null, `${Math.round(clamp(value, 0, 1) * 100)}%`)
+            )
+          )
         );
       }
 
       function WaveformCanvas({ waveform, isRecording, analyserRef, audioRef, palette }) {
         const canvasRef = useRef(null);
-
         useEffect(() => {
           const canvas = canvasRef.current;
           if (!canvas) return undefined;
@@ -1717,332 +1566,291 @@ draw(0);
           function fitCanvas() {
             const rect = canvas.getBoundingClientRect();
             const dpr = window.devicePixelRatio || 1;
-            const width = Math.max(1, Math.floor(rect.width * dpr));
+            const width  = Math.max(1, Math.floor(rect.width  * dpr));
             const height = Math.max(1, Math.floor(rect.height * dpr));
             if (canvas.width !== width || canvas.height !== height) {
-              canvas.width = width;
-              canvas.height = height;
+              canvas.width = width; canvas.height = height;
             }
-            return { width, height, dpr };
+            return { width, height };
           }
 
           function drawIdle(width, height) {
-            const bars = waveform && waveform.length ? waveform : Array.from({ length: 96 }, () => 0.04);
-            const gap = 2;
-            const barWidth = Math.max(2, width / bars.length - gap);
+            const bars = waveform?.length ? waveform : Array.from({ length: 96 }, () => 0.04);
+            const gap = 2, barWidth = Math.max(2, width / bars.length - gap);
             const center = height / 2;
-            ctx.fillStyle = "#121417";
-            ctx.fillRect(0, 0, width, height);
+            ctx.fillStyle = "#121417"; ctx.fillRect(0, 0, width, height);
             ctx.strokeStyle = "rgba(255,255,255,0.08)";
-            ctx.beginPath();
-            ctx.moveTo(0, center);
-            ctx.lineTo(width, center);
-            ctx.stroke();
-
+            ctx.beginPath(); ctx.moveTo(0, center); ctx.lineTo(width, center); ctx.stroke();
             for (let i = 0; i < bars.length; i++) {
-              const value = bars[i];
               const x = i * (barWidth + gap);
-              const barHeight = Math.max(3, value * height * 0.84);
-              const hueColor = colors[i % colors.length];
-              ctx.fillStyle = hueColor;
-              ctx.globalAlpha = waveform && waveform.length ? 0.88 : 0.22;
+              const barHeight = Math.max(3, bars[i] * height * 0.84);
+              ctx.fillStyle = colors[i % colors.length];
+              ctx.globalAlpha = waveform?.length ? 0.88 : 0.22;
               ctx.fillRect(x, center - barHeight / 2, barWidth, barHeight);
             }
             ctx.globalAlpha = 1;
-
             const audio = audioRef?.current;
             if (audio && audio.duration && !audio.paused) {
-              const playX = (audio.currentTime / audio.duration) * width;
-              ctx.fillStyle = "#ffffff";
-              ctx.fillRect(playX, 0, 2, height);
+              const px = (audio.currentTime / audio.duration) * width;
+              ctx.fillStyle = "#ffffff"; ctx.fillRect(px, 0, 2, height);
             }
           }
 
           function drawLive(width, height) {
             const analyser = analyserRef.current;
-            if (!analyser) {
-              drawIdle(width, height);
-              return;
-            }
+            if (!analyser) { drawIdle(width, height); return; }
             const data = new Uint8Array(analyser.fftSize);
             analyser.getByteTimeDomainData(data);
-            ctx.fillStyle = "#121417";
-            ctx.fillRect(0, 0, width, height);
+            ctx.fillStyle = "#121417"; ctx.fillRect(0, 0, width, height);
             ctx.lineWidth = Math.max(2, width / 340);
             ctx.strokeStyle = colors[0] || "#0c9b72";
             ctx.beginPath();
             for (let i = 0; i < data.length; i++) {
-              const x = (i / (data.length - 1)) * width;
-              const y = (data[i] / 255) * height;
-              if (i === 0) ctx.moveTo(x, y);
-              else ctx.lineTo(x, y);
+              const x = (i / (data.length - 1)) * width, y = (data[i] / 255) * height;
+              i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
             }
             ctx.stroke();
-            ctx.strokeStyle = colors[2] || "#ff7a45";
-            ctx.globalAlpha = 0.5;
+            ctx.strokeStyle = colors[2] || "#ff7a45"; ctx.globalAlpha = 0.5;
             ctx.beginPath();
             for (let i = 0; i < data.length; i += 3) {
-              const x = (i / (data.length - 1)) * width;
-              const y = height - (data[i] / 255) * height;
-              if (i === 0) ctx.moveTo(x, y);
-              else ctx.lineTo(x, y);
+              const x = (i / (data.length - 1)) * width, y = height - (data[i] / 255) * height;
+              i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
             }
-            ctx.stroke();
-            ctx.globalAlpha = 1;
+            ctx.stroke(); ctx.globalAlpha = 1;
           }
 
           function render() {
             const { width, height } = fitCanvas();
-            if (isRecording) drawLive(width, height);
-            else drawIdle(width, height);
+            isRecording ? drawLive(width, height) : drawIdle(width, height);
             raf = requestAnimationFrame(render);
           }
-
           render();
           window.addEventListener("resize", fitCanvas);
-          return () => {
-            cancelAnimationFrame(raf);
-            window.removeEventListener("resize", fitCanvas);
-          };
+          return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", fitCanvas); };
         }, [waveform, isRecording, analyserRef, audioRef, palette]);
 
-        return h("canvas", { className: "waveform", ref: canvasRef });
+        return h("canvas", { className: "waveform", ref: canvasRef, "aria-hidden": "true" });
       }
 
+      /* ─── Main App component ─── */
+
       function App() {
-        const [analysis, setAnalysis] = useState(emptyAnalysis);
-        const [waveform, setWaveform] = useState([]);
-        const [audioBlob, setAudioBlob] = useState(null);
-        const [audioUrl, setAudioUrl] = useState("");
-        const [isRecording, setIsRecording] = useState(false);
-        const [isAnalyzing, setIsAnalyzing] = useState(false);
+        const [analysis, setAnalysis]         = useState(emptyAnalysis);
+        const [waveform, setWaveform]         = useState([]);
+        const [audioBlob, setAudioBlob]       = useState(null);
+        const [audioUrl, setAudioUrl]         = useState("");
+        const [isRecording, setIsRecording]   = useState(false);
+        const [isAnalyzing, setIsAnalyzing]   = useState(false);
         const [isTranscribing, setIsTranscribing] = useState(false);
         const [isGenerating, setIsGenerating] = useState(false);
-        const [status, setStatus] = useState("Ready");
-        const [error, setError] = useState("");
+        const [status, setStatus]             = useState("Ready");
+        const [error, setError]               = useState("");
         const [generatedHtml, setGeneratedHtml] = useState("");
-        const [streamText, setStreamText] = useState("");
-        const [promptText, setPromptText] = useState("");
-        const [appType, setAppType] = useState("random");
-        const [feedback, setFeedback] = useState("");
-        const [rating, setRating] = useState(0);
-        const [variation, setVariation] = useState(1);
-        const [gallery, setGallery] = useState(loadGallery);
-        const [toast, setToast] = useState("");
-        const [anthropicKey, setAnthropicKey] = useState(() => getStored(API_STORAGE.anthropicKey));
-        const [anthropicProxy, setAnthropicProxy] = useState(() =>
-          getStored(API_STORAGE.anthropicProxy),
-        );
-        const [openaiKey, setOpenaiKey] = useState(() => getStored(API_STORAGE.openaiKey));
-        const [openaiProxy, setOpenaiProxy] = useState(() => getStored(API_STORAGE.openaiProxy));
+        const [streamText, setStreamText]     = useState("");
+        const [promptText, setPromptText]     = useState("");
+        const [appType, setAppType]           = useState("random");
+        const [feedback, setFeedback]         = useState("");
+        const [rating, setRating]             = useState(0);
+        const [variation, setVariation]       = useState(1);
+        const [gallery, setGallery]           = useState(loadGallery);
+        const [toast, setToast]               = useState("");
+        const [isDragging, setIsDragging]     = useState(false);
 
-        const mediaRecorderRef = useRef(null);
-        const chunksRef = useRef([]);
-        const streamRef = useRef(null);
-        const recordingContextRef = useRef(null);
-        const analyserRef = useRef(null);
-        const audioRef = useRef(null);
+        // Dark mode: init from localStorage or system preference
+        const getInitialTheme = () => {
+          const saved = getStoredLocal(THEME_KEY);
+          if (saved === "dark" || saved === "light") return saved;
+          return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        };
+        const [theme, setTheme] = useState(getInitialTheme);
 
-        useEffect(() => setStored(API_STORAGE.anthropicKey, anthropicKey), [anthropicKey]);
+        useEffect(() => {
+          document.documentElement.setAttribute("data-theme", theme);
+          setStoredLocal(THEME_KEY, theme);
+        }, [theme]);
+
+        const toggleTheme = useCallback(() => {
+          setTheme(t => t === "dark" ? "light" : "dark");
+        }, []);
+
+        const [anthropicKey, setAnthropicKey]   = useState(() => getStored(API_STORAGE.anthropicKey));
+        const [anthropicProxy, setAnthropicProxy] = useState(() => getStored(API_STORAGE.anthropicProxy));
+        const [openaiKey, setOpenaiKey]         = useState(() => getStored(API_STORAGE.openaiKey));
+        const [openaiProxy, setOpenaiProxy]     = useState(() => getStored(API_STORAGE.openaiProxy));
+
+        const mediaRecorderRef     = useRef(null);
+        const chunksRef            = useRef([]);
+        const streamRef            = useRef(null);
+        const recordingContextRef  = useRef(null);
+        const analyserRef          = useRef(null);
+        const audioRef             = useRef(null);
+
+        useEffect(() => setStored(API_STORAGE.anthropicKey,   anthropicKey),   [anthropicKey]);
         useEffect(() => setStored(API_STORAGE.anthropicProxy, anthropicProxy), [anthropicProxy]);
-        useEffect(() => setStored(API_STORAGE.openaiKey, openaiKey), [openaiKey]);
-        useEffect(() => setStored(API_STORAGE.openaiProxy, openaiProxy), [openaiProxy]);
+        useEffect(() => setStored(API_STORAGE.openaiKey,      openaiKey),      [openaiKey]);
+        useEffect(() => setStored(API_STORAGE.openaiProxy,    openaiProxy),    [openaiProxy]);
 
         useEffect(() => {
           if (!toast) return undefined;
-          const timeout = setTimeout(() => setToast(""), 2200);
-          return () => clearTimeout(timeout);
+          const t = setTimeout(() => setToast(""), 2400);
+          return () => clearTimeout(t);
         }, [toast]);
 
         useEffect(() => {
           return () => {
             if (audioUrl) URL.revokeObjectURL(audioUrl);
-            streamRef.current?.getTracks().forEach((track) => track.stop());
+            streamRef.current?.getTracks().forEach(t => t.stop());
             recordingContextRef.current?.close?.();
           };
         }, [audioUrl]);
 
-        const hasAnalysis = analysis.mood !== "unknown";
-        const hasClaudeAccess = Boolean(anthropicKey.trim() || anthropicProxy.trim());
+        const hasAnalysis      = analysis.mood !== "unknown";
+        const hasClaudeAccess  = Boolean(anthropicKey.trim() || anthropicProxy.trim());
         const hasWhisperAccess = Boolean(openaiKey.trim() || openaiProxy.trim());
         const bpmLabel = Number.isFinite(analysis.bpm) ? analysis.bpm : "--";
         const activeThemes = useMemo(
-          () => (analysis.themes.length ? analysis.themes : instrumentalThemes(analysis)),
-          [analysis],
+          () => analysis.themes.length ? analysis.themes : instrumentalThemes(analysis),
+          [analysis]
         );
+        const busy = isRecording || isAnalyzing || isTranscribing || isGenerating;
+
+        // ── Keyboard shortcuts ──────────────────────────────────────────
+        useEffect(() => {
+          function onKey(e) {
+            if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT") return;
+            if ((e.metaKey || e.ctrlKey) && e.key === "d") { e.preventDefault(); toggleTheme(); }
+            if ((e.metaKey || e.ctrlKey) && e.key === "g" && hasAnalysis && !isGenerating && hasClaudeAccess) {
+              e.preventDefault(); generateApp(false);
+            }
+          }
+          window.addEventListener("keydown", onKey);
+          return () => window.removeEventListener("keydown", onKey);
+        }, [hasAnalysis, isGenerating, hasClaudeAccess, toggleTheme]);
+
+        // ── Drag-and-drop handlers ───────────────────────────────────────
+        function onDragOver(e) { e.preventDefault(); setIsDragging(true); }
+        function onDragLeave(e) { if (!e.currentTarget.contains(e.relatedTarget)) setIsDragging(false); }
+        function onDrop(e) {
+          e.preventDefault(); setIsDragging(false);
+          const file = e.dataTransfer?.files?.[0];
+          if (file && file.type.startsWith("audio")) analyzeBlob(file, file.name);
+          else if (file) setError("Please drop an audio file (mp3, wav, m4a…).");
+        }
 
         function loadSampleAnalysis() {
           if (audioUrl) URL.revokeObjectURL(audioUrl);
-          setAudioBlob(null);
-          setAudioUrl("");
+          setAudioBlob(null); setAudioUrl("");
           setWaveform(createSampleWaveform(300));
-          setAnalysis({
-            ...sampleAnalysis,
-            frequencyProfile: { ...sampleAnalysis.frequencyProfile },
-            themes: [...sampleAnalysis.themes],
-          });
-          setGeneratedHtml("");
-          setPromptText("");
-          setStreamText("");
-          setError("");
-          setStatus("Sample analysis ready");
-          setToast("Sample loaded");
+          setAnalysis({ ...sampleAnalysis, frequencyProfile: { ...sampleAnalysis.frequencyProfile }, themes: [...sampleAnalysis.themes] });
+          setGeneratedHtml(""); setPromptText(""); setStreamText(""); setError("");
+          setStatus("Sample analysis ready"); setToast("Sample loaded");
         }
 
-        const analyzeBlob = useCallback(
-          async (blob, sourceName) => {
-            setError("");
-            setIsAnalyzing(true);
-            setStatus("Decoding audio");
-            setAudioBlob(blob);
-            if (audioUrl) URL.revokeObjectURL(audioUrl);
-            const nextAudioUrl = URL.createObjectURL(blob);
-            setAudioUrl(nextAudioUrl);
+        const analyzeBlob = useCallback(async (blob, sourceName) => {
+          setError(""); setIsAnalyzing(true); setStatus("Decoding audio");
+          setAudioBlob(blob);
+          if (audioUrl) URL.revokeObjectURL(audioUrl);
+          const nextUrl = URL.createObjectURL(blob);
+          setAudioUrl(nextUrl);
+          try {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (!AudioCtx) throw new Error("This browser does not support AudioContext.");
+            const context = new AudioCtx();
+            const arrayBuf = await blob.arrayBuffer();
+            const decoded = await context.decodeAudioData(arrayBuf.slice(0));
+            const mono = mixToMono(decoded, Math.min(decoded.duration, 120));
+            setStatus("Finding tempo and energy");
+            const rms = computeRms(mono);
+            const energy = classifyEnergy(rms);
+            const bpm = estimateBpm(mono, decoded.sampleRate);
+            setStatus("Mapping frequency profile");
+            const { profile, dominantRange } = await estimateFrequencyProfile(mono, decoded.sampleRate);
+            const mood = deriveMood(bpm, energy);
+            const palette = palettes[mood] || palettes.chill;
+            const genre = guessGenre(bpm, dominantRange, energy);
+            const baseAnalysis = {
+              sourceName, duration: decoded.duration, bpm, energy,
+              energyScore: Number(rms.toFixed(4)), dominantRange,
+              frequencyProfile: {
+                bass: Number(profile.bass.toFixed(3)),
+                mid:  Number(profile.mid.toFixed(3)),
+                treble: Number(profile.treble.toFixed(3)),
+              },
+              mood, palette, themes: [], transcript: "", genre,
+            };
+            setWaveform(createWaveform(mono, 300));
+            setAnalysis(baseAnalysis);
+            setStatus("Analysis ready");
+            await context.close();
+            if (openaiKey || openaiProxy) await transcribeBlob(blob, sourceName, baseAnalysis);
+          } catch (err) {
+            setError(err.message || String(err));
+            setStatus("Analysis failed");
+          } finally {
+            setIsAnalyzing(false);
+          }
+        }, [audioUrl, openaiKey, openaiProxy]);
 
-            try {
-              const AudioContext = window.AudioContext || window.webkitAudioContext;
-              if (!AudioContext) throw new Error("This browser does not support AudioContext.");
-              const context = new AudioContext();
-              const arrayBuffer = await blob.arrayBuffer();
-              const decoded = await context.decodeAudioData(arrayBuffer.slice(0));
-              const secondsForAnalysis = Math.min(decoded.duration, 120);
-              const mono = mixToMono(decoded, secondsForAnalysis);
-              setStatus("Finding tempo and energy");
-              const rms = computeRms(mono);
-              const energy = classifyEnergy(rms);
-              const bpm = estimateBpm(mono, decoded.sampleRate);
-              setStatus("Mapping frequency profile");
-              const { profile, dominantRange } = await estimateFrequencyProfile(mono, decoded.sampleRate);
-              const mood = deriveMood(bpm, energy);
-              const palette = palettes[mood] || palettes.chill;
-              const genre = guessGenre(bpm, dominantRange, energy);
-              const baseAnalysis = {
-                sourceName,
-                duration: decoded.duration,
-                bpm,
-                energy,
-                energyScore: Number(rms.toFixed(4)),
-                dominantRange,
-                frequencyProfile: {
-                  bass: Number(profile.bass.toFixed(3)),
-                  mid: Number(profile.mid.toFixed(3)),
-                  treble: Number(profile.treble.toFixed(3)),
-                },
-                mood,
-                palette,
-                themes: [],
-                transcript: "",
-                genre,
-              };
-              setWaveform(createWaveform(mono, 300));
-              setAnalysis(baseAnalysis);
-              setStatus("Analysis ready");
-              await context.close();
+        const transcribeBlob = useCallback(async (blob, sourceName, currentAnalysis) => {
+          setError(""); setIsTranscribing(true); setStatus("Transcribing vocals");
+          try {
+            const transcript = await callWhisper({
+              blob, fileName: sourceName,
+              apiKey: openaiKey.trim(), proxyUrl: openaiProxy.trim(),
+            });
+            const themes = extractThemesFromTranscript(transcript);
+            setAnalysis(prev => ({ ...(currentAnalysis || prev), transcript, themes }));
+            setStatus(themes.length ? "Lyrics added to analysis" : "Transcription complete");
+          } catch (err) {
+            setError(err.message || String(err));
+            setStatus("Transcription skipped");
+          } finally {
+            setIsTranscribing(false);
+          }
+        }, [openaiKey, openaiProxy]);
 
-              if (openaiKey || openaiProxy) {
-                await transcribeBlob(blob, sourceName, baseAnalysis);
-              }
-            } catch (caught) {
-              setError(caught.message || String(caught));
-              setStatus("Analysis failed");
-            } finally {
-              setIsAnalyzing(false);
-            }
-          },
-          [audioUrl, openaiKey, openaiProxy],
-        );
-
-        const transcribeBlob = useCallback(
-          async (blob, sourceName, currentAnalysis) => {
-            setError("");
-            setIsTranscribing(true);
-            setStatus("Transcribing vocals");
-            try {
-              const transcript = await callWhisper({
-                blob,
-                fileName: sourceName,
-                apiKey: openaiKey.trim(),
-                proxyUrl: openaiProxy.trim(),
-              });
-              const themes = extractThemesFromTranscript(transcript);
-              setAnalysis((previous) => ({
-                ...(currentAnalysis || previous),
-                transcript,
-                themes,
-              }));
-              setStatus(themes.length ? "Lyrics added to analysis" : "Transcription complete");
-            } catch (caught) {
-              setError(caught.message || String(caught));
-              setStatus("Transcription skipped");
-            } finally {
-              setIsTranscribing(false);
-            }
-          },
-          [openaiKey, openaiProxy],
-        );
-
-        async function handleFile(event) {
-          const file = event.target.files?.[0];
+        async function handleFile(e) {
+          const file = e.target.files?.[0];
           if (!file) return;
           await analyzeBlob(file, file.name);
-          event.target.value = "";
+          e.target.value = "";
         }
 
         async function startRecording() {
           setError("");
           try {
-            if (!navigator.mediaDevices?.getUserMedia) {
-              throw new Error("This browser does not support microphone capture.");
-            }
-            if (!window.MediaRecorder) {
-              throw new Error("This browser does not support MediaRecorder.");
-            }
+            if (!navigator.mediaDevices?.getUserMedia) throw new Error("This browser does not support microphone capture.");
+            if (!window.MediaRecorder) throw new Error("This browser does not support MediaRecorder.");
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            streamRef.current = stream;
-            chunksRef.current = [];
-            const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-              ? "audio/webm;codecs=opus"
-              : "";
+            streamRef.current = stream; chunksRef.current = [];
+            const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus") ? "audio/webm;codecs=opus" : "";
             const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
             mediaRecorderRef.current = recorder;
-            const AudioContext = window.AudioContext || window.webkitAudioContext;
-            const context = new AudioContext();
-            const source = context.createMediaStreamSource(stream);
-            const analyser = context.createAnalyser();
-            analyser.fftSize = 2048;
-            source.connect(analyser);
-            recordingContextRef.current = context;
-            analyserRef.current = analyser;
-            recorder.addEventListener("dataavailable", (event) => {
-              if (event.data && event.data.size > 0) chunksRef.current.push(event.data);
-            });
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            const context = new AudioCtx();
+            const src = context.createMediaStreamSource(stream);
+            const analyser = context.createAnalyser(); analyser.fftSize = 2048;
+            src.connect(analyser);
+            recordingContextRef.current = context; analyserRef.current = analyser;
+            recorder.addEventListener("dataavailable", e => { if (e.data?.size > 0) chunksRef.current.push(e.data); });
             recorder.addEventListener("stop", async () => {
-              const blob = new Blob(chunksRef.current, {
-                type: recorder.mimeType || "audio/webm",
-              });
-              stream.getTracks().forEach((track) => track.stop());
+              const blob = new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" });
+              stream.getTracks().forEach(t => t.stop());
               await context.close();
-              analyserRef.current = null;
-              streamRef.current = null;
-              recordingContextRef.current = null;
+              analyserRef.current = null; streamRef.current = null; recordingContextRef.current = null;
               setIsRecording(false);
               await analyzeBlob(blob, `recording-${Date.now()}.webm`);
             });
-            recorder.start();
-            setIsRecording(true);
-            setStatus("Recording");
-          } catch (caught) {
-            setError(caught.message || String(caught));
+            recorder.start(); setIsRecording(true); setStatus("Recording");
+          } catch (err) {
+            setError(err.message || String(err));
             setStatus("Recording unavailable");
           }
         }
 
         function stopRecording() {
-          const recorder = mediaRecorderRef.current;
-          if (recorder && recorder.state !== "inactive") {
-            setStatus("Finishing recording");
-            recorder.stop();
-          }
+          const r = mediaRecorderRef.current;
+          if (r && r.state !== "inactive") { setStatus("Finishing recording"); r.stop(); }
         }
 
         async function transcribeCurrentAudio() {
@@ -2052,80 +1860,42 @@ draw(0);
 
         function saveGeneratedApp(html, engine) {
           const item = {
-            id: `${Date.now()}`,
-            html,
-            engine,
-            mood: analysis.mood,
-            bpm: analysis.bpm,
+            id: `${Date.now()}`, html, engine,
+            mood: analysis.mood, bpm: analysis.bpm,
             sourceName: analysis.sourceName || "song",
             createdAt: new Date().toISOString(),
           };
-          setGallery((previous) => {
-            const next = [item, ...previous].slice(0, 8);
-            saveGallery(next);
-            return next;
+          setGallery(prev => {
+            const next = [item, ...prev].slice(0, 8);
+            saveGallery(next); return next;
           });
         }
 
         async function generateApp(isRegeneration) {
-          if (!hasAnalysis) {
-            setError("Analyze a song first.");
-            return;
-          }
-          const nextVariation = isRegeneration ? variation + 1 : variation;
-          if (isRegeneration) setVariation(nextVariation);
-          const prompt = makePrompt(
-            analysis,
-            appType,
-            `${rating ? `rating ${rating}/5. ` : ""}${feedback}`.trim(),
-            nextVariation,
-          );
-          setPromptText(prompt);
-          setStreamText("");
-          setGeneratedHtml("");
-          setError("");
-          setIsGenerating(true);
-          setStatus(isRegeneration ? "Regenerating app" : "Generating app");
-
+          if (!hasAnalysis) { setError("Analyze a song first."); return; }
+          const nextVar = isRegeneration ? variation + 1 : variation;
+          if (isRegeneration) setVariation(nextVar);
+          const prompt = makePrompt(analysis, appType, `${rating ? `rating ${rating}/5. ` : ""}${feedback}`.trim(), nextVar);
+          setPromptText(prompt); setStreamText(""); setGeneratedHtml(""); setError("");
+          setIsGenerating(true); setStatus(isRegeneration ? "Regenerating app" : "Generating app");
           try {
-            const fullText = await callClaude({
-              prompt,
-              apiKey: anthropicKey.trim(),
-              proxyUrl: anthropicProxy.trim(),
-              onText: setStreamText,
-            });
+            const fullText = await callClaude({ prompt, apiKey: anthropicKey.trim(), proxyUrl: anthropicProxy.trim(), onText: setStreamText });
             const html = extractHtml(fullText);
-            setGeneratedHtml(html);
-            saveGeneratedApp(html, "Claude");
-            setStatus("Generated app ready");
-          } catch (caught) {
-            setError(caught.message || String(caught));
-            setStatus("Generation failed");
-          } finally {
-            setIsGenerating(false);
-          }
+            setGeneratedHtml(html); saveGeneratedApp(html, "Claude"); setStatus("Generated app ready");
+          } catch (err) {
+            setError(err.message || String(err)); setStatus("Generation failed");
+          } finally { setIsGenerating(false); }
         }
 
         function generateDemoApp() {
-          if (!hasAnalysis) {
-            setError("Analyze a song first.");
-            return;
-          }
-          const nextVariation = variation + 1;
-          setVariation(nextVariation);
-          const prompt = makePrompt(
-            analysis,
-            appType,
-            `${rating ? `rating ${rating}/5. ` : ""}${feedback}`.trim(),
-            nextVariation,
-          );
-          const html = generateDemoHtml(analysis, appType, nextVariation);
+          if (!hasAnalysis) { setError("Analyze a song first."); return; }
+          const nextVar = variation + 1;
+          setVariation(nextVar);
+          const prompt = makePrompt(analysis, appType, `${rating ? `rating ${rating}/5. ` : ""}${feedback}`.trim(), nextVar);
+          const html = generateDemoHtml(analysis, appType, nextVar);
           setPromptText(prompt);
           setStreamText("Demo generation ran locally. Add an Anthropic key or proxy for Claude output.");
-          setGeneratedHtml(html);
-          saveGeneratedApp(html, "Demo");
-          setError("");
-          setStatus("Demo app ready");
+          setGeneratedHtml(html); saveGeneratedApp(html, "Demo"); setError(""); setStatus("Demo app ready");
         }
 
         async function copyCode() {
@@ -2138,609 +1908,391 @@ draw(0);
         }
 
         function downloadAnalysis() {
-          downloadText(
-            analysisJson,
-            `${normalizeFileName(analysis.sourceName || "song-analysis", "song-analysis")}.json`,
-            "application/json;charset=utf-8",
-          );
+          downloadText(analysisJson, `${normalizeFileName(analysis.sourceName || "song-analysis", "song-analysis")}.json`, "application/json;charset=utf-8");
         }
 
         function loadGalleryItem(item) {
           setGeneratedHtml(item.html);
           setStreamText(`Loaded ${item.engine || "saved"} app from gallery.`);
-          setError("");
-          setStatus("Loaded saved app");
+          setError(""); setStatus("Loaded saved app");
         }
 
-        function downloadGalleryItem(item) {
-          downloadHtml(item.html, item.sourceName || "saved-song-app");
-        }
+        function downloadGalleryItem(item) { downloadHtml(item.html, item.sourceName || "saved-song-app"); }
+
+        function openGalleryItem(item) { openInTab(item.html); }
 
         function deleteGalleryItem(id) {
-          setGallery((previous) => {
-            const next = previous.filter((item) => item.id !== id);
-            saveGallery(next);
-            return next;
-          });
+          setGallery(prev => { const next = prev.filter(i => i.id !== id); saveGallery(next); return next; });
           setToast("Saved app removed");
         }
 
-        function clearGallery() {
-          setGallery([]);
-          saveGallery([]);
-          setToast("Gallery cleared");
-        }
+        function clearGallery() { setGallery([]); saveGallery([]); setToast("Gallery cleared"); }
 
-        const analysisJson = JSON.stringify(
-          {
-            sourceName: analysis.sourceName,
-            duration: formatDuration(analysis.duration),
-            bpm: analysis.bpm,
-            energy: analysis.energy,
-            energyScore: analysis.energyScore,
-            dominantRange: analysis.dominantRange,
-            frequencyProfile: analysis.frequencyProfile,
-            mood: analysis.mood,
-            colorPalette: analysis.palette,
-            lyricThemes: activeThemes,
-            genre: analysis.genre,
-            transcript: analysis.transcript,
-          },
-          null,
-          2,
-        );
+        const analysisJson = JSON.stringify({
+          sourceName: analysis.sourceName, duration: formatDuration(analysis.duration),
+          bpm: analysis.bpm, energy: analysis.energy, energyScore: analysis.energyScore,
+          dominantRange: analysis.dominantRange, frequencyProfile: analysis.frequencyProfile,
+          mood: analysis.mood, colorPalette: analysis.palette,
+          lyricThemes: activeThemes, genre: analysis.genre, transcript: analysis.transcript,
+        }, null, 2);
 
-        return h(
-          "div",
-          { className: "app" },
-          h(
-            "header",
-            { className: "topbar" },
-            h(
-              "div",
-              { className: "topbar-inner" },
-              h(
-                "div",
-                { className: "brand" },
+        /* ─── Render ─── */
+        return h("div", { className: "app" },
+
+          /* Topbar */
+          h("header", { className: "topbar" },
+            h("div", { className: "topbar-inner" },
+              h("div", { className: "brand" },
                 h("div", { className: "mark", "aria-hidden": "true" }, "S"),
-                h(
-                  "div",
-                  { className: "brand-copy" },
+                h("div", { className: "brand-copy" },
                   h("span", { className: "kicker" }, "Audio to interface"),
-                  h("h1", null, "Song to App"),
-                ),
+                  h("h1", null, "Song to App")
+                )
               ),
-              h("div", { className: "model-chip" }, hasClaudeAccess ? "Claude ready" : "Demo ready"),
-            ),
+              h("div", { className: "topbar-controls" },
+                h("span", { className: "model-chip" }, hasClaudeAccess ? "Claude ready" : "Demo ready"),
+                h("button", {
+                  className: "theme-toggle",
+                  onClick: toggleTheme,
+                  title: `Switch to ${theme === "dark" ? "light" : "dark"} mode (Ctrl+D)`,
+                  "aria-label": `Switch to ${theme === "dark" ? "light" : "dark"} mode`,
+                }, theme === "dark" ? "☀️" : "🌙")
+              )
+            )
           ),
-          h(
-            "main",
-            { className: "shell" },
-            h(
-              "section",
-              { className: "left-stack" },
-              h(
-                "div",
-                { className: "panel" },
-                h(
-                  "div",
-                  { className: "panel-header" },
-                  h("h2", { className: "panel-title" }, "Audio Input"),
-                  h("div", { className: "hint" }, analysis.sourceName || "No song loaded"),
+
+          /* Main two-column shell */
+          h("main", { className: "shell" },
+
+            /* ── LEFT column ── */
+            h("section", { className: "left-stack", "aria-label": "Controls" },
+
+              /* Audio Input panel — drag-and-drop wrapper */
+              h("div", {
+                className: classNames("panel panel-drop-wrap", isDragging && "drag-over"),
+                onDragOver, onDragLeave, onDrop,
+              },
+                h("div", { className: "drop-hint", "aria-hidden": "true" },
+                  h("span", null, "🎵"), h("span", null, "Drop audio file to analyze")
                 ),
-                h(
-                  "div",
-                  { className: "panel-body" },
-                  h(
-                    "div",
-                    { className: "analysis-summary" },
-                    h(
-                      "div",
-                      { className: "mood-readout" },
+                h("div", { className: "panel-header" },
+                  h("h2", { className: "panel-title" }, "Audio Input"),
+                  h("div", { className: "hint" }, analysis.sourceName || "No song loaded")
+                ),
+                h("div", { className: "panel-body" },
+                  h("div", { className: "analysis-summary" },
+                    h("div", { className: "mood-readout" },
                       h("span", { className: "summary-label" }, "Mood"),
                       h("strong", null, analysis.mood),
-                      h("span", { className: "summary-sub", title: analysis.sourceName || status }, analysis.sourceName || status),
+                      h("span", { className: "summary-sub", title: analysis.sourceName || status }, analysis.sourceName || status)
                     ),
-                    h(
-                      "div",
-                      { className: "tempo-readout" },
+                    h("div", { className: "tempo-readout" },
                       h("span", { className: "summary-label" }, "Tempo"),
                       h("strong", null, bpmLabel),
-                      h("small", null, "BPM"),
-                    ),
+                      h("small", null, "BPM")
+                    )
                   ),
-                  h(
-                    "div",
-                    { className: "actions" },
-                    h(
-                      "label",
-                      { className: "file-button primary" },
+                  h("div", { className: "actions" },
+                    h("label", { className: "file-button primary" },
                       "Upload Song",
                       h("input", {
                         className: "hidden-input",
                         type: "file",
                         accept: "audio/*,.mp3,.wav,.m4a",
                         onChange: handleFile,
-                        disabled: isRecording || isAnalyzing || isGenerating,
-                      }),
+                        disabled: busy,
+                        "aria-label": "Upload audio file",
+                      })
                     ),
-                    h(
-                      Button,
-                      {
-                        className: "ghost",
-                        onClick: loadSampleAnalysis,
-                        disabled: isRecording || isAnalyzing || isGenerating,
-                      },
-                      "Try Sample",
-                    ),
-                    h(
-                      Button,
-                      {
-                        className: isRecording ? "coral" : "",
-                        onClick: isRecording ? stopRecording : startRecording,
-                        disabled: isAnalyzing || isGenerating,
-                      },
-                      isRecording ? "Stop Recording" : "Record from Mic",
-                    ),
-                    h(
-                      Button,
-                      {
-                        className: "ghost",
-                        onClick: transcribeCurrentAudio,
-                        disabled: !audioBlob || isTranscribing || !hasWhisperAccess,
-                        title: hasWhisperAccess ? "" : "Add an OpenAI key or Whisper proxy first.",
-                      },
-                      isTranscribing ? "Transcribing" : "Transcribe Vocals",
-                    ),
+                    h(Button, { className: "ghost", onClick: loadSampleAnalysis, disabled: busy }, "Try Sample"),
+                    h(Button, {
+                      className: isRecording ? "coral" : "",
+                      onClick: isRecording ? stopRecording : startRecording,
+                      disabled: isAnalyzing || isGenerating,
+                      "aria-pressed": isRecording,
+                    }, isRecording ? "Stop Recording" : "Record from Mic"),
+                    h(Button, {
+                      className: "ghost",
+                      onClick: transcribeCurrentAudio,
+                      disabled: !audioBlob || isTranscribing || !hasWhisperAccess,
+                      title: hasWhisperAccess ? "" : "Add an OpenAI key or Whisper proxy first.",
+                    }, isTranscribing ? "Transcribing…" : "Transcribe Vocals")
                   ),
-                  h(
-                    "div",
-                    { className: "status", role: "status" },
-                    (isRecording || isAnalyzing || isTranscribing || isGenerating) &&
-                      h("span", { className: "spinner", "aria-hidden": "true" }),
-                    h("span", null, status),
+                  h("div", { className: "status", role: "status", "aria-live": "polite" },
+                    busy && h("span", { className: "spinner", "aria-hidden": "true" }),
+                    h("span", null, status)
                   ),
-                  h(
-                    "div",
-                    { className: "wave-wrap" },
-                    h(WaveformCanvas, {
-                      waveform,
-                      isRecording,
-                      analyserRef,
-                      audioRef,
-                      palette: analysis.palette,
-                    }),
+                  h("div", { className: "wave-wrap" },
+                    h(WaveformCanvas, { waveform, isRecording, analyserRef, audioRef, palette: analysis.palette })
                   ),
-                  audioUrl &&
-                    h("audio", {
-                      ref: audioRef,
-                      controls: true,
-                      src: audioUrl,
-                    }),
-                  error && h("p", { className: "hint danger-text" }, error),
-                  h(
-                    "div",
-                    { className: "metrics" },
-                    h(Metric, {
-                      label: "BPM",
-                      value: Number.isFinite(analysis.bpm) ? analysis.bpm : "Unknown",
-                    }),
-                    h(Metric, { label: "Mood", value: analysis.mood }),
-                    h(Metric, { label: "Energy", value: analysis.energy }),
+                  audioUrl && h("audio", { ref: audioRef, controls: true, src: audioUrl }),
+                  h(ErrorBox, { message: error }),
+                  h("div", { className: "metrics" },
+                    h(Metric, { label: "BPM",    value: Number.isFinite(analysis.bpm) ? analysis.bpm : "Unknown" }),
+                    h(Metric, { label: "Mood",   value: analysis.mood }),
+                    h(Metric, { label: "Energy", value: analysis.energy })
                   ),
-                  h(
-                    "div",
-                    { className: "metrics" },
+                  h("div", { className: "metrics" },
                     h(Metric, { label: "Frequency", value: analysis.dominantRange }),
-                    h(Metric, { label: "Genre", value: analysis.genre }),
-                    h(Metric, { label: "Length", value: formatDuration(analysis.duration) }),
+                    h(Metric, { label: "Genre",     value: analysis.genre }),
+                    h(Metric, { label: "Length",    value: formatDuration(analysis.duration) })
                   ),
                   h(FrequencyBars, { profile: analysis.frequencyProfile }),
-                  h(
-                    "div",
-                    { className: "palette", "aria-label": "Color palette" },
-                    analysis.palette.colors.map((color) =>
+                  h("div", { className: "palette", "aria-label": `Color palette: ${analysis.palette.name}` },
+                    analysis.palette.colors.map(color =>
                       h("span", {
-                        key: color,
-                        className: "swatch",
-                        title: color,
-                        style: { backgroundColor: color },
-                      }),
+                        key: color, className: "swatch",
+                        title: color, style: { backgroundColor: color },
+                        role: "img", "aria-label": color,
+                      })
                     ),
-                  ),
+                    h("span", { className: "palette-name" }, analysis.palette.name)
+                  )
                 ),
-                h(
-                  "details",
-                  null,
-                  h("summary", null, "Analysis Data", h("span", null, "+")),
-                  h(
-                    "div",
-                    { className: "details-body field-grid" },
-                    h(
-                      "div",
-                      { className: "actions" },
-                      h(
-                        Button,
-                        { className: "ghost", onClick: copyAnalysis, disabled: !hasAnalysis },
-                        "Copy Analysis",
-                      ),
-                      h(
-                        Button,
-                        { className: "ghost", onClick: downloadAnalysis, disabled: !hasAnalysis },
-                        "Download JSON",
-                      ),
+                h("details", null,
+                  h("summary", null, "Analysis Data", h("span", { "aria-hidden": "true" }, "+")),
+                  h("div", { className: "details-body field-grid" },
+                    h("div", { className: "actions" },
+                      h(Button, { className: "ghost", onClick: copyAnalysis,    disabled: !hasAnalysis }, "Copy Analysis"),
+                      h(Button, { className: "ghost", onClick: downloadAnalysis, disabled: !hasAnalysis }, "Download JSON")
                     ),
-                    h("pre", { className: "json-view" }, analysisJson),
-                  ),
-                ),
+                    h("pre", { className: "json-view" }, analysisJson)
+                  )
+                )
               ),
-              h(
-                "div",
-                { className: "panel" },
-                h(
-                  "div",
-                  { className: "panel-header" },
+
+              /* Generation panel */
+              h("div", { className: "panel" },
+                h("div", { className: "panel-header" },
                   h("h2", { className: "panel-title" }, "Generation"),
-                  h("div", { className: "hint" }, activeThemes.slice(0, 3).join(", ") || "Themes pending"),
+                  h("div", { className: "hint" }, activeThemes.slice(0, 3).join(", ") || "Themes pending")
                 ),
-                h(
-                  "div",
-                  { className: "panel-body field-grid" },
-                  h(
-                    Field,
-                    { label: "App Type" },
-                    h(
-                      "div",
-                      { className: "segmented" },
-                      ["random", "visualizer", "game", "art", "poem", "mood board"].map((type) =>
-                        h(
-                          "button",
-                          {
-                            key: type,
-                            type: "button",
-                            className: classNames("segment", appType === type && "active"),
-                            onClick: () => setAppType(type),
-                          },
-                          type.replace(/\b\w/g, (letter) => letter.toUpperCase()),
-                        ),
-                      ),
-                    ),
+                h("div", { className: "panel-body field-grid" },
+                  h(Field, { label: "App Type" },
+                    h("div", { className: "segmented", role: "group", "aria-label": "App type" },
+                      ["random","visualizer","game","art","poem","mood board"].map(type =>
+                        h("button", {
+                          key: type, type: "button",
+                          className: classNames("segment", appType === type && "active"),
+                          onClick: () => setAppType(type),
+                          "aria-pressed": appType === type,
+                        }, type.replace(/\b\w/g, l => l.toUpperCase()))
+                      )
+                    )
                   ),
-                  h(
-                    Field,
-                    { label: "Feedback" },
+                  /* Live palette preview in the generation panel */
+                  hasAnalysis && h("div", null,
+                    h("span", { className: "field" }, h("span", null, "Palette Preview")),
+                    h("div", { className: "gen-palette" },
+                      analysis.palette.colors.map(c =>
+                        h("span", { key: c, className: "gen-palette-swatch", style: { backgroundColor: c }, title: c })
+                      ),
+                      h("span", { className: "gen-palette-label" }, analysis.palette.name)
+                    )
+                  ),
+                  h(Field, { label: "Feedback" },
                     h("textarea", {
                       value: feedback,
-                      onChange: (event) => setFeedback(event.target.value),
-                      placeholder: "More playful, calmer, stranger, more like a game...",
-                    }),
+                      onChange: e => setFeedback(e.target.value),
+                      placeholder: "More playful, calmer, stranger, more like a game…",
+                    })
                   ),
-                  h(
-                    Field,
-                    { label: "Creative Match" },
-                    h(
-                      "select",
-                      {
-                        value: rating,
-                        onChange: (event) => setRating(Number(event.target.value)),
-                      },
+                  h(Field, { label: "Creative Match" },
+                    h("select", {
+                      value: rating,
+                      onChange: e => setRating(Number(e.target.value)),
+                    },
                       h("option", { value: 0 }, "Not rated"),
-                      h("option", { value: 1 }, "1 - Missed it"),
-                      h("option", { value: 2 }, "2 - Close"),
-                      h("option", { value: 3 }, "3 - Good"),
-                      h("option", { value: 4 }, "4 - Strong"),
-                      h("option", { value: 5 }, "5 - Perfect"),
-                    ),
+                      h("option", { value: 1 }, "1 — Missed it"),
+                      h("option", { value: 2 }, "2 — Close"),
+                      h("option", { value: 3 }, "3 — Good"),
+                      h("option", { value: 4 }, "4 — Strong"),
+                      h("option", { value: 5 }, "5 — Perfect")
+                    )
                   ),
-                  h(
-                    "div",
-                    { className: "chips" },
-                    activeThemes.map((theme) => h("span", { className: "chip", key: theme }, theme)),
+                  h("div", { className: "chips", "aria-label": "Active themes" },
+                    activeThemes.map(t => h("span", { className: "chip", key: t }, t))
                   ),
-                  h(
-                    "div",
-                    { className: "actions" },
-                    h(
-                      Button,
-                      {
-                        className: hasClaudeAccess ? "primary" : "",
-                        onClick: () => generateApp(false),
-                        disabled: !hasAnalysis || isGenerating || !hasClaudeAccess,
-                        title: hasClaudeAccess ? "" : "Add an Anthropic key or Claude proxy first.",
-                      },
-                      isGenerating ? "Generating" : "Generate with Claude",
-                    ),
-                    h(
-                      Button,
-                      {
-                        onClick: () => generateApp(true),
-                        disabled: !hasAnalysis || isGenerating || !hasClaudeAccess,
-                        title: hasClaudeAccess ? "" : "Add an Anthropic key or Claude proxy first.",
-                      },
-                      "Regenerate",
-                    ),
-                    h(
-                      Button,
-                      {
-                        className: hasClaudeAccess ? "ghost" : "primary",
-                        onClick: generateDemoApp,
-                        disabled: !hasAnalysis || isGenerating,
-                      },
-                      "Generate Demo",
-                    ),
-                  ),
+                  h("div", { className: "actions" },
+                    h(Button, {
+                      className: hasClaudeAccess ? "primary" : "",
+                      onClick: () => generateApp(false),
+                      disabled: !hasAnalysis || isGenerating || !hasClaudeAccess,
+                      title: hasClaudeAccess ? "Generate with Claude (Ctrl+G)" : "Add an Anthropic key or Claude proxy first.",
+                    }, isGenerating ? "Generating…" : h("span", null, "Generate with Claude", h("kbd", { className: "kbd" }, "⌘G"))),
+                    h(Button, {
+                      onClick: () => generateApp(true),
+                      disabled: !hasAnalysis || isGenerating || !hasClaudeAccess,
+                      title: hasClaudeAccess ? "" : "Add an Anthropic key or Claude proxy first.",
+                    }, "Regenerate"),
+                    h(Button, {
+                      className: hasClaudeAccess ? "ghost" : "primary",
+                      onClick: generateDemoApp,
+                      disabled: !hasAnalysis || isGenerating,
+                    }, "Generate Demo")
+                  )
                 ),
-                h(
-                  "details",
-                  null,
-                  h("summary", null, "Prompt", h("span", null, "+")),
-                  h(
-                    "div",
-                    { className: "details-body" },
-                    h("pre", { className: "stream-view" }, promptText || "Generated prompt will appear here."),
-                  ),
+                h("details", null,
+                  h("summary", null, "Prompt", h("span", { "aria-hidden": "true" }, "+")),
+                  h("div", { className: "details-body" },
+                    h("pre", { className: "stream-view" }, promptText || "Generated prompt will appear here.")
+                  )
                 ),
-                h(
-                  "details",
-                  { open: isGenerating || Boolean(streamText && !generatedHtml) },
-                  h("summary", null, "Claude Stream", h("span", null, "+")),
-                  h(
-                    "div",
-                    { className: "details-body" },
-                    h("pre", { className: "stream-view" }, streamText || "Waiting for generation."),
-                  ),
-                ),
+                h("details", { open: isGenerating || Boolean(streamText && !generatedHtml) },
+                  h("summary", null, "Claude Stream", h("span", { "aria-hidden": "true" }, "+")),
+                  h("div", { className: "details-body" },
+                    h("pre", { className: "stream-view" }, streamText || "Waiting for generation.")
+                  )
+                )
               ),
-              h(
-                "div",
-                { className: "panel" },
-                h(
-                  "div",
-                  { className: "panel-header" },
+
+              /* API Settings panel */
+              h("div", { className: "panel" },
+                h("div", { className: "panel-header" },
                   h("h2", { className: "panel-title" }, "API Settings"),
-                  h(
-                    "div",
-                    { className: "header-chips" },
-                    h("span", { className: classNames("mini-chip", hasClaudeAccess && "ready") }, hasClaudeAccess ? "Claude ready" : "Claude off"),
-                    h("span", { className: classNames("mini-chip", hasWhisperAccess && "ready") }, hasWhisperAccess ? "Whisper ready" : "Whisper off"),
-                  ),
+                  h("div", { className: "header-chips" },
+                    h("span", { className: classNames("mini-chip", hasClaudeAccess && "ready") },
+                      hasClaudeAccess ? "Claude ready" : "Claude off"),
+                    h("span", { className: classNames("mini-chip", hasWhisperAccess && "ready") },
+                      hasWhisperAccess ? "Whisper ready" : "Whisper off")
+                  )
                 ),
-                h(
-                  "div",
-                  { className: "panel-body field-grid" },
-                  h(
-                    "div",
-                    { className: "field-row" },
-                    h(
-                      Field,
-                      { label: "Anthropic Key" },
-                      h("input", {
-                        type: "password",
-                        value: anthropicKey,
-                        onChange: (event) => setAnthropicKey(event.target.value),
-                        placeholder: "sk-ant-...",
-                        autoComplete: "off",
-                      }),
+                h("div", { className: "panel-body field-grid" },
+                  h("div", { className: "field-row" },
+                    h(Field, { label: "Anthropic Key", id: "anthropic-key" },
+                      h("input", { id: "anthropic-key", type: "password", value: anthropicKey, onChange: e => setAnthropicKey(e.target.value), placeholder: "sk-ant-…", autoComplete: "off" })
                     ),
-                    h(
-                      Field,
-                      { label: "Claude Proxy URL" },
-                      h("input", {
-                        value: anthropicProxy,
-                        onChange: (event) => setAnthropicProxy(event.target.value),
-                        placeholder: "https://your-proxy/messages",
-                      }),
-                    ),
+                    h(Field, { label: "Claude Proxy URL", id: "claude-proxy" },
+                      h("input", { id: "claude-proxy", value: anthropicProxy, onChange: e => setAnthropicProxy(e.target.value), placeholder: "https://your-proxy/messages" })
+                    )
                   ),
-                  h(
-                    "div",
-                    { className: "field-row" },
-                    h(
-                      Field,
-                      { label: "OpenAI Key" },
-                      h("input", {
-                        type: "password",
-                        value: openaiKey,
-                        onChange: (event) => setOpenaiKey(event.target.value),
-                        placeholder: "sk-...",
-                        autoComplete: "off",
-                      }),
+                  h("div", { className: "field-row" },
+                    h(Field, { label: "OpenAI Key", id: "openai-key" },
+                      h("input", { id: "openai-key", type: "password", value: openaiKey, onChange: e => setOpenaiKey(e.target.value), placeholder: "sk-…", autoComplete: "off" })
                     ),
-                    h(
-                      Field,
-                      { label: "Whisper Proxy URL" },
-                      h("input", {
-                        value: openaiProxy,
-                        onChange: (event) => setOpenaiProxy(event.target.value),
-                        placeholder: "https://your-proxy/transcriptions",
-                      }),
-                    ),
+                    h(Field, { label: "Whisper Proxy URL", id: "whisper-proxy" },
+                      h("input", { id: "whisper-proxy", value: openaiProxy, onChange: e => setOpenaiProxy(e.target.value), placeholder: "https://your-proxy/transcriptions" })
+                    )
                   ),
-                  h(
-                    "p",
-                    { className: "hint" },
-                    "Use proxy URLs to keep keys server-side. Direct browser calls are convenient for local testing and keep keys in this tab's session storage.",
-                  ),
-                ),
-              ),
-            ),
-            h(
-              "section",
-              { className: "right-stack" },
-              h(
-                "div",
-                { className: "panel preview-shell" },
-                h(
-                  "div",
-                  { className: "preview-toolbar" },
+                  h("p", { className: "hint" },
+                    "Use proxy URLs to keep keys server-side. Direct browser calls are convenient for local testing and store keys in this tab's session storage only."
+                  )
+                )
+              )
+
+            ), /* end left-stack */
+
+            /* ── RIGHT column ── */
+            h("section", { className: "right-stack", "aria-label": "Preview" },
+
+              /* Generated app preview */
+              h("div", { className: "panel preview-shell" },
+                h("div", { className: "preview-toolbar" },
                   h("h2", { className: "panel-title" }, "Generated App"),
-                  h(
-                    "div",
-                    { className: "actions" },
-                    h(
-                      Button,
-                      {
-                        onClick: () => generateApp(true),
-                        disabled: !hasAnalysis || isGenerating || !hasClaudeAccess,
-                        title: hasClaudeAccess ? "" : "Add an Anthropic key or Claude proxy first.",
-                      },
-                      "Regenerate",
-                    ),
-                    h(
-                      Button,
-                      {
-                        onClick: copyCode,
-                        disabled: !generatedHtml,
-                      },
-                      "Copy Code",
-                    ),
-                    h(
-                      Button,
-                      {
-                        onClick: () => downloadHtml(generatedHtml, analysis.sourceName || "generated-song-app"),
-                        disabled: !generatedHtml,
-                      },
-                      "Download",
-                    ),
-                  ),
+                  h("div", { className: "preview-toolbar-actions" },
+                    h(Button, {
+                      onClick: () => generateApp(true),
+                      disabled: !hasAnalysis || isGenerating || !hasClaudeAccess,
+                      title: hasClaudeAccess ? "" : "Add an Anthropic key or Claude proxy first.",
+                    }, "Regenerate"),
+                    h(Button, { onClick: copyCode, disabled: !generatedHtml }, "Copy Code"),
+                    h(Button, {
+                      onClick: () => downloadHtml(generatedHtml, analysis.sourceName || "generated-song-app"),
+                      disabled: !generatedHtml,
+                    }, "Download"),
+                    h(Button, {
+                      onClick: () => openInTab(generatedHtml),
+                      disabled: !generatedHtml,
+                      title: "Open in a new browser tab",
+                    }, "Open in Tab")
+                  )
                 ),
-                h(
-                  "div",
-                  { className: "preview-frame-wrap" },
+                h("div", { className: "preview-frame-wrap" },
                   generatedHtml
                     ? h("iframe", {
                         title: "Generated song app",
                         sandbox: "allow-scripts allow-forms",
                         srcDoc: generatedHtml,
                       })
-                    : h(
-                        "div",
-                        { className: "empty-preview" },
-                        h(
-                          "div",
-                          { className: "empty-preview-card" },
-                          h(
-                            "div",
-                            { className: "empty-visual", "aria-hidden": "true" },
-                            [42, 72, 36, 104, 62, 126, 54, 92, 44, 118, 70, 48, 96, 58, 82, 40].map(
-                              (height, index) =>
-                                h("span", {
-                                  className: "empty-bar",
-                                  key: index,
-                                  style: { "--bar-height": `${height}px` },
-                                }),
-                            ),
+                    : h("div", { className: "empty-preview" },
+                        h("div", { className: "empty-preview-card" },
+                          h("div", { className: "empty-visual", "aria-hidden": "true" },
+                            [42,72,36,104,62,126,54,92,44,118,70,48,96,58,82,40].map((height, i) =>
+                              h("span", { className: "empty-bar", key: i, style: { "--bar-height": `${height}px` } })
+                            )
                           ),
                           h("strong", null, hasAnalysis ? "Ready to generate" : "Waiting for a song"),
-                          h(
-                            "p",
-                            null,
+                          h("p", null,
                             hasAnalysis
                               ? `${analysis.mood} / ${analysis.energy} / ${Number.isFinite(analysis.bpm) ? `${analysis.bpm} BPM` : "tempo mapped"}`
-                              : "No waveform analyzed yet.",
+                              : "Drop an audio file or click Upload Song."
                           ),
-                          h(
-                            "div",
-                            { className: "actions" },
-                            !hasAnalysis &&
-                              h(
-                                Button,
-                                { className: "primary", onClick: loadSampleAnalysis },
-                                "Try Sample",
-                              ),
-                            hasAnalysis &&
-                              h(
-                                Button,
-                                { className: hasClaudeAccess ? "ghost" : "primary", onClick: generateDemoApp, disabled: isGenerating },
-                                "Generate Demo",
-                              ),
-                            hasAnalysis &&
-                              h(
-                                Button,
-                                {
-                                  className: hasClaudeAccess ? "primary" : "",
-                                  onClick: () => generateApp(false),
-                                  disabled: isGenerating || !hasClaudeAccess,
-                                  title: hasClaudeAccess ? "" : "Add an Anthropic key or Claude proxy first.",
-                                },
-                                "Generate with Claude",
-                              ),
-                          ),
-                        ),
-                      ),
-                ),
-              ),
-              h(
-                "div",
-                { className: "panel" },
-                h(
-                  "div",
-                  { className: "panel-header" },
-                  h("h2", { className: "panel-title" }, "Gallery"),
-                  h(
-                    "div",
-                    { className: "actions" },
-                    h(
-                      Button,
-                      { className: "ghost", onClick: clearGallery, disabled: gallery.length === 0 },
-                      "Clear",
-                    ),
-                  ),
-                ),
-                h(
-                  "div",
-                  { className: "panel-body" },
-                  gallery.length
-                    ? h(
-                        "div",
-                        { className: "gallery-grid" },
-                        gallery.map((item) =>
-                          h(
-                            "div",
-                            { className: "gallery-item", key: item.id },
-                            h("div", { className: "gallery-name", title: item.sourceName }, item.sourceName),
-                            h(
-                              "div",
-                              { className: "gallery-meta" },
-                              [
-                                item.engine || "App",
-                                item.mood || "mood",
-                                Number.isFinite(item.bpm) ? `${item.bpm} BPM` : "",
-                                formatDateTime(item.createdAt),
-                              ]
-                                .filter(Boolean)
-                                .join(" - "),
-                            ),
-                            h(
-                              "div",
-                              { className: "gallery-actions" },
-                              h(
-                                Button,
-                                { onClick: () => loadGalleryItem(item), className: "ghost" },
-                                "Load",
-                              ),
-                              h(
-                                Button,
-                                { onClick: () => downloadGalleryItem(item), className: "ghost" },
-                                "Download",
-                              ),
-                              h(
-                                Button,
-                                { onClick: () => deleteGalleryItem(item.id), className: "ghost" },
-                                "Remove",
-                              ),
-                            ),
-                          ),
-                        ),
+                          h("div", { className: "actions" },
+                            !hasAnalysis && h(Button, { className: "primary", onClick: loadSampleAnalysis }, "Try Sample"),
+                            hasAnalysis && h(Button, {
+                              className: hasClaudeAccess ? "ghost" : "primary",
+                              onClick: generateDemoApp,
+                              disabled: isGenerating,
+                            }, "Generate Demo"),
+                            hasAnalysis && h(Button, {
+                              className: hasClaudeAccess ? "primary" : "",
+                              onClick: () => generateApp(false),
+                              disabled: isGenerating || !hasClaudeAccess,
+                              title: hasClaudeAccess ? "" : "Add an Anthropic key or Claude proxy first.",
+                            }, "Generate with Claude")
+                          )
+                        )
                       )
-                    : h("div", { className: "hint" }, "Generated apps are saved here in localStorage."),
-                ),
+                )
               ),
-            ),
-          ),
-          toast && h("div", { className: "toast" }, toast),
-        );
-      }
+
+              /* Gallery */
+              h("div", { className: "panel" },
+                h("div", { className: "panel-header" },
+                  h("h2", { className: "panel-title" }, "Gallery"),
+                  h("div", { className: "actions" },
+                    h(Button, { className: "ghost", onClick: clearGallery, disabled: gallery.length === 0 }, "Clear")
+                  )
+                ),
+                h("div", { className: "panel-body" },
+                  gallery.length
+                    ? h("div", { className: "gallery-grid" },
+                        gallery.map(item =>
+                          h("div", { className: "gallery-item", key: item.id },
+                            /* Mood color stripe at top */
+                            h("div", {
+                              className: "gallery-mood-bar",
+                              style: { background: MOOD_COLORS[item.mood] || MOOD_COLORS.unknown },
+                              "aria-hidden": "true",
+                            }),
+                            h("div", { className: "gallery-name", title: item.sourceName }, item.sourceName),
+                            h("div", { className: "gallery-meta" },
+                              [item.engine||"App", item.mood||"mood",
+                               Number.isFinite(item.bpm) ? `${item.bpm} BPM` : "",
+                               formatDateTime(item.createdAt)]
+                              .filter(Boolean).join(" · ")
+                            ),
+                            h("div", { className: "gallery-actions" },
+                              h(Button, { onClick: () => loadGalleryItem(item),     className: "ghost" }, "Load"),
+                              h(Button, { onClick: () => openGalleryItem(item),     className: "ghost", title: "Open in new tab" }, "Open"),
+                              h(Button, { onClick: () => downloadGalleryItem(item), className: "ghost" }, "Download"),
+                              h(Button, { onClick: () => deleteGalleryItem(item.id), className: "ghost" }, "Remove")
+                            )
+                          )
+                        )
+                      )
+                    : h("div", { className: "hint" }, "Generated apps are saved here. Up to 8 are kept in localStorage.")
+                )
+              )
+
+            ) /* end right-stack */
+          ), /* end shell */
+
+          /* Toast notification */
+          toast && h("div", { className: "toast", role: "status", "aria-live": "polite" }, toast)
+
+        ); /* end app div */
+      } /* end App() */
 
       ReactDOM.createRoot(document.getElementById("root")).render(h(App));
     </script>
